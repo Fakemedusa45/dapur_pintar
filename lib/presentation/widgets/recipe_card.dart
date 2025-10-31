@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';  // For GoRouter navigation
 import 'package:dapur_pintar/domain/models/recipe.dart';
 import 'package:dapur_pintar/presentation/routes/app_router.dart';
-import 'package:dapur_pintar/core/utils/responsive.dart'; // Pastikan import ini ada
+import 'package:dapur_pintar/core/utils/responsive.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
+  final VoidCallback? onTap;  // Optional callback for custom tap handling
 
   const RecipeCard({
     Key? key,
     required this.recipe,
+    this.onTap,
   }) : super(key: key);
 
   @override
@@ -16,11 +19,10 @@ class RecipeCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => Navigator.pushNamed(
-          context,
-          AppRouter.recipeDetail,
-          arguments: recipe,
-        ),
+        onTap: onTap ?? () {
+          // Default: Use GoRouter to navigate to recipe detail
+          context.push(AppRouter.recipeDetail, extra: recipe);
+        },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -29,6 +31,21 @@ class RecipeCard extends StatelessWidget {
               child: Image.network(
                 recipe.imageUrl,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  // Handle network errors (e.g., 404) by showing a placeholder
+                  return Container(
+                    color: Colors.grey[300],  // Light gray background
+                    child: Icon(
+                      Icons.image_not_supported,  // Placeholder icon for broken images
+                      size: 50,
+                      color: Colors.grey[600],
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(child: CircularProgressIndicator());  // Show loading spinner
+                },
               ),
             ),
             Padding(
@@ -49,8 +66,7 @@ class RecipeCard extends StatelessWidget {
                       SizedBox(width: 4),
                       Text('${recipe.duration} min'),
                       SizedBox(width: 16),
-                      // Ganti Icons.difficulty dengan ikon yang sesuai
-                      Icon(Icons.flag, size: 14), // Misalnya ikon bendera untuk tingkat kesulitan
+                      Icon(Icons.flag, size: 14),  // Icon for difficulty
                       SizedBox(width: 4),
                       Text(recipe.difficulty),
                     ],
@@ -65,18 +81,26 @@ class RecipeCard extends StatelessWidget {
   }
 }
 
-// --- Widget ResponsiveGrid DIPINDAHKAN KE SINI ---
+// --- Widget ResponsiveGrid ---
 class ResponsiveGrid extends StatelessWidget {
-  final List<dynamic> recipeList; // Bisa disesuaikan tipe datanya jika perlu
+  final List<Recipe> recipeList;  // Changed to List<Recipe> for type safety
+  final Function(Recipe)? onRecipeTap;  // Optional callback for recipe tap
 
-  const ResponsiveGrid({Key? key, required this.recipeList}) : super(key: key);
+  const ResponsiveGrid({
+    Key? key,
+    required this.recipeList,
+    this.onRecipeTap,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (ResponsiveUtil.isMobile(context)) {
       return ListView.builder(
         itemCount: recipeList.length,
-        itemBuilder: (context, index) => RecipeCard(recipe: recipeList[index]),
+        itemBuilder: (context, index) => RecipeCard(
+          recipe: recipeList[index],
+          onTap: onRecipeTap != null ? () => onRecipeTap!(recipeList[index]) : null,
+        ),
       );
     } else {
       return GridView.builder(
@@ -87,9 +111,12 @@ class ResponsiveGrid extends StatelessWidget {
           mainAxisSpacing: 16,
         ),
         itemCount: recipeList.length,
-        itemBuilder: (context, index) => RecipeCard(recipe: recipeList[index]),
+        itemBuilder: (context, index) => RecipeCard(
+          recipe: recipeList[index],
+          onTap: onRecipeTap != null ? () => onRecipeTap!(recipeList[index]) : null,
+        ),
       );
     }
   }
 }
-// --- Akhir Widget ResponsiveGrid ---
+// --- End of ResponsiveGrid ---

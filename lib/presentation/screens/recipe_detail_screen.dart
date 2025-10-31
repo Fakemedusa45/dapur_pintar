@@ -18,17 +18,24 @@ class RecipeDetailScreen extends ConsumerWidget {
         title: Text(recipe.title),
         actions: [
           IconButton(
+            tooltip: isSaved ? 'Hapus dari simpanan' : 'Simpan resep',  // Added for accessibility
             onPressed: () async {
               final notifier = ref.read(savedRecipesNotifierProvider.notifier);
-              if (isSaved) {
-                await notifier.removeRecipe(recipe.id);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Resep dihapus dari simpanan')));
+              try {
+                if (isSaved) {
+                  await notifier.removeRecipe(recipe.id);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Resep dihapus dari simpanan')));
+                  }
+                } else {
+                  await notifier.saveRecipe(recipe);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Resep disimpan')));
+                  }
                 }
-              } else {
-                await notifier.saveRecipe(recipe);
+              } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Resep disimpan')));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menyimpan resep: $e')));
                 }
               }
             },
@@ -44,13 +51,26 @@ class RecipeDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+            AspectRatio(  // Responsive 16:9 aspect ratio for the image
+              aspectRatio: 16 / 9,
               child: Image.network(
                 recipe.imageUrl,
                 fit: BoxFit.cover,
-                height: 250,
-                width: double.infinity,
+                errorBuilder: (context, error, stackTrace) {
+                  // Handle network errors (e.g., 404) by showing a placeholder
+                  return Container(
+                    color: Colors.grey[300],  // Light gray background
+                    child: Icon(
+                      Icons.image_not_supported,  // Placeholder icon for broken images
+                      size: 50,
+                      color: Colors.grey[600],
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(child: CircularProgressIndicator());  // Show loading spinner
+                },
               ),
             ),
             SizedBox(height: 16),

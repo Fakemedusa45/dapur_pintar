@@ -1,30 +1,90 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
+import 'package:go_router/go_router.dart';  // Added for GoRouter navigation
 // Import provider
 import 'package:dapur_pintar/application/providers/scan_provider.dart'; // <- Untuk scanNotifierProvider
 // Tambahkan import untuk ScanState
 import 'package:dapur_pintar/application/notifiers/scan_notifier.dart'; // <- Import ini DIBUTUHKAN untuk ScanState
 import 'package:dapur_pintar/application/providers/home_provider.dart'; // <- Untuk navigasi ke home setelah scan
-import 'package:dapur_pintar/presentation/routes/app_router.dart';
+import 'package:dapur_pintar/presentation/routes/app_router.dart';  // For AppRouter constants
+import 'package:dapur_pintar/presentation/screens/home_screen.dart';  // For HomeContent
+import 'package:dapur_pintar/presentation/screens/saved_recipes_screen.dart'; // For _SavedContent
 
-class ScanScreen extends ConsumerWidget {
+class ScanScreen extends StatefulWidget {
+  @override
+  _ScanScreenState createState() => _ScanScreenState();
+}
+
+class _ScanScreenState extends State<ScanScreen> {
+  int _selectedIndex = 2;  // Default to "Scan" tab (index 2)
+
+  static final List<Widget> _screens = <Widget>[
+    HomeContent(),      // Home content (recipes)
+    SavedContent(),    // Saved recipes content
+    _ScanContent(),     // Scan content (extracted from original body)
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+    // Use GoRouter to navigate (replace current route)
+    switch (index) {
+      case 0:
+        context.go(AppRouter.home);
+        break;
+      case 1:
+        context.go(AppRouter.saved);
+        break;
+      case 2:
+        context.go(AppRouter.scan);
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Pindai Bahan'),  // Kept your original app bar title
+      ),
+      body: _screens[_selectedIndex],  // Display the selected screen
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.bookmark),
+            label: 'Tersimpan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.camera_alt),
+            label: 'Pindai',
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+      ),
+    );
+  }
+}
+
+// Extracted widget for scan content (keeps your original logic clean)
+class _ScanContent extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(scanNotifierProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Pindai Bahan'),
-      ),
-      body: state.error != null
-          ? Center(child: Text('Error: ${state.error}'))
-          : state.isProcessing
-              ? Center(child: CircularProgressIndicator())
-              : state.detectedIngredients != null
-                  ? _buildResults(context, ref, state.detectedIngredients!)
-                  : _buildCameraView(ref, state),
-    );
+    return state.error != null
+        ? Center(child: Text('Error: ${state.error}'))
+        : state.isProcessing
+            ? Center(child: CircularProgressIndicator())
+            : state.detectedIngredients != null
+                ? _buildResults(context, ref, state.detectedIngredients!)
+                : _buildCameraView(ref, state);
   }
 
   Widget _buildCameraView(WidgetRef ref, ScanState state) {

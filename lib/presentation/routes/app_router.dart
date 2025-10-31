@@ -16,10 +16,6 @@ class AppRouter {
     initialLocation: home,
     routes: [
       GoRoute(
-        path: '/',
-        redirect: (BuildContext context, GoRouterState state) => home,
-      ),
-      GoRoute(
         path: home,
         name: 'home',
         pageBuilder: (context, state) => MaterialPage(child: HomeScreen()),
@@ -37,8 +33,18 @@ class AppRouter {
       GoRoute(
         path: recipeDetail,
         name: 'detail',
-        pageBuilder: (context, state) => MaterialPage(child: RecipeDetailScreen(recipe: state.extra as Recipe)),
+        pageBuilder: (context, state) {
+          final recipe = state.extra as Recipe?;
+          if (recipe == null) {
+            // Fallback if no recipe is passed (e.g., show error or redirect)
+            return MaterialPage(child: Scaffold(body: Center(child: Text('Recipe not found'))));
+          }
+          return MaterialPage(child: RecipeDetailScreen(recipe: recipe));
+        },
       ),
     ],
+    errorPageBuilder: (context, state) => MaterialPage(
+      child: Scaffold(body: Center(child: Text('Page not found'))),
+    ),
   );
 }
