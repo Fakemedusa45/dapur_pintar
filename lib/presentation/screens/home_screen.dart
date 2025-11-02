@@ -46,6 +46,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Dapur Pintar'),
+        backgroundColor: Color(0xFF4CAF50),  // Hijau gelap untuk tema dapur segar
+        elevation: 4,  // Tambah shadow untuk hiasan
         actions: [
           IconButton(
             onPressed: () {
@@ -55,11 +57,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 builder: (context) => FilterBottomSheet(),
               );
             },
-            icon: Icon(Icons.filter_alt),
+            icon: Icon(Icons.filter_alt, color: Colors.white),  // Ikon putih untuk kontras
           ),
         ],
       ),
-      body: _screens[_selectedIndex],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE8F5E8), Color(0xFFF1F8E9)],  // Gradient hijau muda untuk background halus
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: _screens[_selectedIndex],
+      ),
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -76,6 +87,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
+        selectedItemColor: Color(0xFF4CAF50),  // Hijau untuk item terpilih
+        unselectedItemColor: Colors.grey,  // Abu untuk tidak terpilih
+        backgroundColor: Colors.white,  // Background putih dengan shadow
+        elevation: 8,  // Tambah shadow
         onTap: _onItemTapped,
       ),
     );
@@ -91,18 +106,66 @@ class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
       padding: EdgeInsets.symmetric(horizontal: ResponsiveUtil.getHorizontalPadding(context)),
       child: Column(
         children: [
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Cari resep...',
-              prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(),
+          // Tambah hiasan: Container dengan shadow dan border radius
+          Container(
+            margin: EdgeInsets.only(top: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 8,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
-            onChanged: (value) => ref.read(homeNotifierProvider.notifier).setSearchQuery(value),
+            child: TextField(
+              decoration: InputDecoration(
+                hintText: 'Cari resep...',
+                prefixIcon: Icon(Icons.search, color: Color(0xFF4CAF50)),  // Ikon hijau
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,  // Hilangkan border default
+                ),
+                filled: true,
+                fillColor: Colors.white,
+              ),
+              onChanged: (value) => ref.read(homeNotifierProvider.notifier).setSearchQuery(value),
+            ),
           ),
           SizedBox(height: 16),
+          // Tambah header dengan ikon hiasan
+          Row(
+            children: [
+              Icon(Icons.restaurant_menu, color: Color(0xFFFF9800)),  // Ikon oranye untuk hiasan
+              SizedBox(width: 8),
+              Text(
+                'Resep Terbaru',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF4CAF50),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 8),
           Expanded(
             child: state.filteredRecipes.isEmpty
-                ? Center(child: Text('Tidak ada resep yang ditemukan.'))
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.no_food, size: 64, color: Colors.grey),  // Ikon hiasan untuk empty state
+                        SizedBox(height: 16),
+                        Text(
+                          'Tidak ada resep yang ditemukan.',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
                 : ResponsiveGrid(
                     recipeList: state.filteredRecipes,
                     onRecipeTap: (recipe) {

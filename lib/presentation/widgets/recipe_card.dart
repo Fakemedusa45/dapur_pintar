@@ -28,24 +28,21 @@ class RecipeCard extends StatelessWidget {
           children: [
             AspectRatio(
               aspectRatio: 16 / 9,
-              child: Image.network(
-                recipe.imageUrl,
+              child: Image.asset(
+                recipe.imageUrl,  // Changed from Image.network to Image.asset for local assets
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  // Handle network errors (e.g., 404) by showing a placeholder
+                  // Handle asset errors (e.g., file not found) by showing a placeholder
                   return Container(
                     color: Colors.grey[300],  // Light gray background
                     child: Icon(
-                      Icons.image_not_supported,  // Placeholder icon for broken images
+                      Icons.image_not_supported,  // Placeholder icon for missing images
                       size: 50,
                       color: Colors.grey[600],
                     ),
                   );
                 },
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(child: CircularProgressIndicator());  // Show loading spinner
-                },
+                // Removed loadingBuilder as it's not needed for local assets (they load instantly)
               ),
             ),
             Padding(

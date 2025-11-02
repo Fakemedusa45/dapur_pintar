@@ -1,3 +1,4 @@
+import 'dart:io';  // Add this import for File
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:camera/camera.dart';
@@ -84,10 +85,10 @@ class _ScanContent extends ConsumerWidget {
             ? Center(child: CircularProgressIndicator())
             : state.detectedIngredients != null
                 ? _buildResults(context, ref, state.detectedIngredients!)
-                : _buildCameraView(ref, state);
+                : _buildCaptureView(ref, state);
   }
 
-  Widget _buildCameraView(WidgetRef ref, ScanState state) {
+  Widget _buildCaptureView(WidgetRef ref, ScanState state) {
     if (state.controller == null || !state.controller!.value.isInitialized) {
       return Container();
     }
@@ -95,13 +96,68 @@ class _ScanContent extends ConsumerWidget {
     return Stack(
       children: [
         CameraPreview(state.controller!),
+        if (state.capturedImages.isNotEmpty) ...[
+          Align(
+            alignment: Alignment.topCenter,
+            child: Container(
+              height: 100,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: state.capturedImages.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Stack(
+                      children: [
+                        Image.file(
+                          File(state.capturedImages[index].path),
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
+                        Positioned(
+                          top: 0,
+                          right: 0,
+                          child: GestureDetector(
+                            onTap: () => ref.read(scanNotifierProvider.notifier).removeImage(index),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.8),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.close,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        ],
         Align(
           alignment: Alignment.bottomCenter,
           child: Padding(
             padding: EdgeInsets.all(24.0),
-            child: FloatingActionButton(
-              onPressed: () => ref.read(scanNotifierProvider.notifier).takePicture(),
-              child: Icon(Icons.camera_alt),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                FloatingActionButton(
+                  onPressed: () => ref.read(scanNotifierProvider.notifier).takePicture(),
+                  child: Icon(Icons.camera_alt),
+                ),
+                if (state.capturedImages.isNotEmpty)
+                  FloatingActionButton(
+                    onPressed: () => ref.read(scanNotifierProvider.notifier).processImages(),
+                    child: Icon(Icons.check),
+                  ),
+              ],
             ),
           ),
         ),
