@@ -109,6 +109,24 @@ class HomeNotifier extends StateNotifier<HomeState> {
     _applyFilters();
   }
 
+  void addRecipe(Recipe recipe) {
+    _repository.addRecipe(recipe);
+    _loadRecipes(); // Muat ulang daftar resep
+    _applyFilters(); // Terapkan filter yang mungkin sedang aktif
+  }
+
+  void updateRecipe(Recipe recipe) {
+    _repository.updateRecipe(recipe);
+    _loadRecipes();
+    _applyFilters();
+  }
+
+  void deleteRecipe(String id) {
+    _repository.deleteRecipe(id);
+    _loadRecipes();
+    _applyFilters();
+  }
+
   void _applyFilters() {
     List<Recipe> results = state.allRecipes;
 

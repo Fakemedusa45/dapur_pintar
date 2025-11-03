@@ -1,3 +1,5 @@
+// lib/presentation/screens/home_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';  // Add this import
@@ -17,6 +19,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
+  // Daftar layar untuk Bottom Navigation Bar
   static final List<Widget> _screens = <Widget>[
     HomeContent(),
     SavedRecipesScreen(),
@@ -24,6 +27,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ];
 
   void _onItemTapped(int index) {
+    // --- PERBAIKAN 1: HAPUS SEMUA context.go() ---
+    // Cukup gunakan setState untuk mengganti layar yang ditampilkan di body
     setState(() {
       _selectedIndex = index;
     });
@@ -46,19 +51,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Dapur Pintar'),
-        backgroundColor: Color(0xFF4CAF50),  // Hijau gelap untuk tema dapur segar
-        elevation: 4,  // Tambah shadow untuk hiasan
+        backgroundColor: Color(0xFF4CAF50), // Hijau gelap untuk tema dapur segar
+        elevation: 4, // Tambah shadow untuk hiasan
         actions: [
-          IconButton(
-            onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                isScrollControlled: true,
-                builder: (context) => FilterBottomSheet(),
-              );
-            },
-            icon: Icon(Icons.filter_alt, color: Colors.white),  // Ikon putih untuk kontras
-          ),
+          // Hanya tampilkan tombol filter jika sedang di tab Home (indeks 0)
+          if (_selectedIndex == 0)
+            IconButton(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (context) => FilterBottomSheet(),
+                );
+              },
+              icon: Icon(Icons.filter_alt, color: Colors.white), // Ikon putih untuk kontras
+            ),
         ],
       ),
       body: Container(
@@ -69,6 +76,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             end: Alignment.bottomCenter,
           ),
         ),
+        // Tampilkan layar berdasarkan indeks yang dipilih
         child: _screens[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -87,12 +95,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Color(0xFF4CAF50),  // Hijau untuk item terpilih
-        unselectedItemColor: Colors.grey,  // Abu untuk tidak terpilih
-        backgroundColor: Colors.white,  // Background putih dengan shadow
-        elevation: 8,  // Tambah shadow
+        selectedItemColor: Color(0xFF4CAF50), // Hijau untuk item terpilih
+        unselectedItemColor: Colors.grey, // Abu untuk tidak terpilih
+        backgroundColor: Colors.white, // Background putih dengan shadow
+        elevation: 8, // Tambah shadow
         onTap: _onItemTapped,
       ),
+
+      // --- PERBAIKAN 2: TAMBAHKAN KEMBALI TOMBOL 'ADD' (CRUD) ---
+      // Hanya tampilkan tombol '+' jika kita berada di tab Home (indeks 0)
+      floatingActionButton: _selectedIndex == 0
+          ? FloatingActionButton(
+              heroTag: 'add_button',
+              onPressed: () {
+                // Navigasi ke halaman Tambah Resep
+                context.push(AppRouter.addRecipe);
+              },
+              backgroundColor: Color(0xFFFF9800), // Warna oranye
+              child: Icon(Icons.add, color: Colors.white),
+            )
+          : null, // Sembunyikan tombol jika tidak di tab Home
     );
   }
 }
@@ -106,7 +128,6 @@ class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
       padding: EdgeInsets.symmetric(horizontal: ResponsiveUtil.getHorizontalPadding(context)),
       child: Column(
         children: [
-          // Tambah hiasan: Container dengan shadow dan border radius
           Container(
             margin: EdgeInsets.only(top: 16),
             decoration: BoxDecoration(
@@ -123,10 +144,10 @@ class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Cari resep...',
-                prefixIcon: Icon(Icons.search, color: Color(0xFF4CAF50)),  // Ikon hijau
+                prefixIcon: Icon(Icons.search, color: Color(0xFF4CAF50)), // Ikon hijau
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,  // Hilangkan border default
+                  borderSide: BorderSide.none, // Hilangkan border default
                 ),
                 filled: true,
                 fillColor: Colors.white,
@@ -135,7 +156,6 @@ class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
             ),
           ),
           SizedBox(height: 16),
-          // Tambah header dengan ikon hiasan
           Row(
             children: [
               Icon(Icons.restaurant_menu, color: Color(0xFFFF9800)),  // Ikon oranye untuk hiasan
@@ -151,6 +171,7 @@ class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
             ],
           ),
           SizedBox(height: 8),
+          // Grid Daftar Resep
           Expanded(
             child: state.filteredRecipes.isEmpty
                 ? Center(

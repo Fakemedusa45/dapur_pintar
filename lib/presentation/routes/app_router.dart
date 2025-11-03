@@ -5,12 +5,15 @@ import 'package:dapur_pintar/presentation/screens/scan_screen.dart';
 import 'package:dapur_pintar/presentation/screens/saved_recipes_screen.dart';
 import 'package:dapur_pintar/presentation/screens/recipe_detail_screen.dart';
 import 'package:dapur_pintar/domain/models/recipe.dart';
+import 'package:dapur_pintar/presentation/screens/add_edit_recipe_screen.dart';
 
 class AppRouter {
   static const String home = '/home';
   static const String scan = '/scan';
   static const String saved = '/saved';
   static const String recipeDetail = '/detail';
+  static const String addRecipe = '/add'; // 2. BUAT KONSTANTA BARU
+  static const String editRecipe = '/edit'; // 3. BUAT KONSTANTA BARU
 
   static final GoRouter router = GoRouter(
     initialLocation: home,
@@ -41,6 +44,22 @@ class AppRouter {
           }
           return MaterialPage(child: RecipeDetailScreen(recipe: recipe));
         },
+      ),
+
+      GoRoute(
+        path: addRecipe,
+        name: 'add',
+        pageBuilder: (context, state) => MaterialPage(
+          child: AddEditRecipeScreen(recipe: null), // Kirim null karena ini resep baru
+        ),
+      ),
+      // Rute untuk mode 'Update' (Edit)
+      GoRoute(
+        path: editRecipe,
+        name: 'edit',
+        pageBuilder: (context, state) => MaterialPage(
+          child: AddEditRecipeScreen(recipe: state.extra as Recipe), // Kirim resep yang ada
+        ),
       ),
     ],
     errorPageBuilder: (context, state) => MaterialPage(
