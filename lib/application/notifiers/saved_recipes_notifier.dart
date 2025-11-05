@@ -40,14 +40,14 @@ class SavedRecipesNotifier extends StateNotifier<SavedRecipesState> {
       state = state.copyWith(savedRecipes: recipes, isLoading: false);
     } catch (e) {
       print('Error loading saved recipes: $e');
-      state = state.copyWith(isLoading: false); // Pastikan isLoading diset false walaupun error
+      state = state.copyWith(isLoading: false); 
     }
   }
 
   Future<void> saveRecipe(Recipe recipe) async {
     try {
       await _repository.saveRecipe(recipe);
-      await loadSavedRecipes(); // Refresh list
+      await loadSavedRecipes(); 
     } catch (e) {
       print('Error saving recipe: $e');
     }

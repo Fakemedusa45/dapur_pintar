@@ -8,3 +8,4 @@ final homeNotifierProvider = StateNotifierProvider<HomeNotifier, HomeState>((ref
   final repository = ref.watch(mockRecipeRepositoryProvider);
   return HomeNotifier(repository);
 });
+

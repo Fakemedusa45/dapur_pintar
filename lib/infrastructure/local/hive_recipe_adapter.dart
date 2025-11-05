@@ -1,39 +1,66 @@
-// lib/infrastructure/local/hive_recipe_adapter.dart
-// Dijalankan setelah membuat model Recipe
-// Jalankan: flutter packages pub run build_runner build
-import 'package:hive/hive.dart';
-import 'package:dapur_pintar/domain/models/recipe.dart';
+// import 'package:hive/hive.dart';
+// import 'package:dapur_pintar/domain/models/recipe.dart';
 
-part 'hive_recipe_adapter.g.dart';
+// part 'hive_recipe_adapter.g.dart';
 
-@HiveType(typeId: 0)
-class RecipeAdapter extends TypeAdapter<Recipe> {
-  @override
-  final int typeId = 0;
+// @HiveType(typeId: 0)
+// class RecipeHiveModel extends HiveObject {
+//   @HiveField(0)
+//   String id;
 
-  @override
-  Recipe read(BinaryReader reader) {
-    return Recipe(
-      id: reader.readString(),
-      title: reader.readString(),
-      imageUrl: reader.readString(),
-      duration: reader.readInt(),
-      difficulty: reader.readString(),
-      category: reader.readString(),
-      ingredients: reader.readStringList(),
-      steps: reader.readStringList(),
-    );
-  }
+//   @HiveField(1)
+//   String title;
 
-  @override
-  void write(BinaryWriter writer, Recipe obj) {
-    writer.writeString(obj.id);
-    writer.writeString(obj.title);
-    writer.writeString(obj.imageUrl);
-    writer.writeInt(obj.duration);
-    writer.writeString(obj.difficulty);
-    writer.writeString(obj.category);
-    writer.writeStringList(obj.ingredients);
-    writer.writeStringList(obj.steps);
-  }
-}
+//   @HiveField(2)
+//   String imageUrl;
+
+//   @HiveField(3)
+//   int duration;
+
+//   @HiveField(4)
+//   String difficulty;
+
+//   @HiveField(5)
+//   String category;
+
+//   @HiveField(6)
+//   List<String> ingredients;
+
+//   @HiveField(7)
+//   List<String> steps;
+
+//   RecipeHiveModel({
+//     required this.id,
+//     required this.title,
+//     required this.imageUrl,
+//     required this.duration,
+//     required this.difficulty,
+//     required this.category,
+//     required this.ingredients,
+//     required this.steps,
+//   });
+
+//   /// Konversi dari HiveModel ke Domain Model
+//   Recipe toDomain() => Recipe(
+//         id: id,
+//         title: title,
+//         imageUrl: imageUrl,
+//         duration: duration,
+//         difficulty: difficulty,
+//         category: category,
+//         ingredients: ingredients,
+//         steps: steps,
+//       );
+
+//   /// Konversi dari Domain Model ke HiveModel
+//   static RecipeHiveModel fromDomain(Recipe recipe) => RecipeHiveModel(
+//         id: recipe.id,
+//         title: recipe.title,
+//         imageUrl: recipe.imageUrl,
+//         duration: recipe.duration,
+//         difficulty: recipe.difficulty,
+//         category: recipe.category,
+//         ingredients: recipe.ingredients,
+//         steps: recipe.steps,
+//       );
+// }

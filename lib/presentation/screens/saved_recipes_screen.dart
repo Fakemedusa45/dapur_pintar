@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';  // For GoRouter navigation
+import 'package:go_router/go_router.dart';  
 import 'package:dapur_pintar/application/providers/saved_recipes_provider.dart';
 import 'package:dapur_pintar/presentation/widgets/recipe_card.dart';
 import 'package:dapur_pintar/presentation/widgets/empty_state.dart';
 import 'package:dapur_pintar/core/utils/responsive.dart';
-import 'package:dapur_pintar/presentation/routes/app_router.dart';  // For AppRouter constants
-import 'package:dapur_pintar/presentation/screens/home_screen.dart';  // For HomeContent (now public)
-import 'package:dapur_pintar/presentation/screens/scan_screen.dart';  // For ScanScreen
-
+import 'package:dapur_pintar/presentation/routes/app_router.dart'; 
+import 'package:dapur_pintar/presentation/screens/home_screen.dart'; 
+import 'package:dapur_pintar/presentation/screens/scan_screen.dart';  
 
 class SavedRecipesScreen extends StatefulWidget {
   @override
@@ -16,19 +15,19 @@ class SavedRecipesScreen extends StatefulWidget {
 }
 
 class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
-  int _selectedIndex = 1;  // Default to "Saved" tab (index 1)
+  int _selectedIndex = 1;  
 
   static final List<Widget> _screens = <Widget>[
-    HomeContent(),  // Home content (recipes) - Now public
-    SavedContent(),  // Saved recipes content
-    ScanScreen(),    // Scan screen
+    HomeContent(),  
+    SavedContent(), 
+    ScanScreen(),  
   ];
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
-    // Use GoRouter to navigate (replace current route)
+    
     switch (index) {
       case 0:
         context.go(AppRouter.home);
@@ -48,7 +47,7 @@ class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
       appBar: AppBar(
         title: Text('Resep Tersimpan'),
       ),
-      body: _screens[_selectedIndex],  // Display the selected screen
+      body: _screens[_selectedIndex],  
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -71,8 +70,7 @@ class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
   }
 }
 
-// Separate widget for the saved recipes content (to keep it clean)
-class SavedContent extends ConsumerWidget {  // Renamed from _SavedContent
+class SavedContent extends ConsumerWidget { 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(savedRecipesNotifierProvider);
@@ -86,7 +84,7 @@ class SavedContent extends ConsumerWidget {  // Renamed from _SavedContent
               : ResponsiveGrid(
                   recipeList: state.savedRecipes,
                   onRecipeTap: (recipe) {
-                    // Use GoRouter to push to detail (stacks on top)
+                   
                     context.push(AppRouter.recipeDetail, extra: recipe);
                   },
                 ),

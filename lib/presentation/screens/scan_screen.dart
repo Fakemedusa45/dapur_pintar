@@ -186,11 +186,10 @@ class _ScanContent extends ConsumerWidget {
           SizedBox(height: 32),
           ElevatedButton(
             onPressed: () {
-              // Set filter di home provider
+              
               final ingredientString = ingredients.join(', ');
               ref.read(homeNotifierProvider.notifier).setMustIncludeIngredient(ingredientString);
-              ref.read(scanNotifierProvider.notifier).resetDetection(); // Reset state scan
-              // Navigate ke home screen
+              ref.read(scanNotifierProvider.notifier).resetDetection(); 
               Navigator.pushNamedAndRemoveUntil(context, AppRouter.home, (route) => false);
             },
             child: Text('Cari Resep Berdasarkan Bahan Ini'),

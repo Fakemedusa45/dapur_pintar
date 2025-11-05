@@ -3,12 +3,11 @@
 import 'package:dapur_pintar/domain/models/recipe.dart';
 
 class MockRecipeRepository {
-  // 1. HAPUS 'final' agar list bisa diubah
   List<Recipe> _recipes = [
     Recipe(
       id: '1',
       title: 'Nasi Goreng Sederhana',
-      imageUrl: 'https://example.com/nasi_goreng.jpg',
+      imageUrl: 'assets/images/nasi_goreng.jpeg', 
       duration: 15,
       difficulty: 'Mudah',
       category: 'Makan Malam',
@@ -23,7 +22,7 @@ class MockRecipeRepository {
     Recipe(
       id: '2',
       title: 'Omelet Telur',
-      imageUrl: 'https://example.com/omelet.jpg',
+      imageUrl: 'assets/images/omelet.jpg', 
       duration: 10,
       difficulty: 'Mudah',
       category: 'Sarapan',
@@ -37,7 +36,7 @@ class MockRecipeRepository {
     Recipe(
       id: '3',
       title: 'Sup Sayur',
-      imageUrl: 'https://example.com/sup_sayur.jpg',
+      imageUrl: 'assets/images/sup_sayur.jpeg',  
       duration: 30,
       difficulty: 'Sedang',
       category: 'Makan Siang',
@@ -51,7 +50,7 @@ class MockRecipeRepository {
     Recipe(
       id: '4',
       title: 'Salad Buah',
-      imageUrl: 'https://example.com/salad_buah.jpg',
+      imageUrl: 'assets/images/salad_buah.jpg', 
       duration: 10,
       difficulty: 'Mudah',
       category: 'Dessert',
@@ -65,28 +64,19 @@ class MockRecipeRepository {
   ];
 
   List<Recipe> getRecipes() {
-    // 2. Kembalikan list _recipes
     return _recipes;
   }
-
-  // --- 3. TAMBAHKAN FUNGSI DI BAWAH INI ---
-  
-  // CREATE
   void addRecipe(Recipe recipe) {
     _recipes.add(recipe);
   }
 
-  // UPDATE
-  void updateRecipe(Recipe updatedRecipe) {
-    // Cari index resep yang akan diupdate
-    final index = _recipes.indexWhere((recipe) => recipe.id == updatedRecipe.id);
-    if (index != -1) {
-      // Ganti resep di index tersebut dengan data baru
-      _recipes[index] = updatedRecipe;
-    }
-  }
 
-  // DELETE
+  void updateRecipe(Recipe updatedRecipe) {
+  final index = _recipes.indexWhere((recipe) => recipe.id == updatedRecipe.id);
+  if (index != -1) {
+    _recipes[index] = updatedRecipe; // GANTI OBJEK LAMA DENGAN YANG BARU
+  }
+}
   void deleteRecipe(String id) {
     _recipes.removeWhere((recipe) => recipe.id == id);
   }

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';  // For GoRouter navigation
+import 'package:go_router/go_router.dart';  
 import 'package:dapur_pintar/domain/models/recipe.dart';
 import 'package:dapur_pintar/presentation/routes/app_router.dart';
 import 'package:dapur_pintar/core/utils/responsive.dart';
+import 'dart:io';
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
-  final VoidCallback? onTap;  // Optional callback for custom tap handling
-
+  final VoidCallback? onTap; 
   const RecipeCard({
     Key? key,
     required this.recipe,
@@ -20,7 +20,6 @@ class RecipeCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap ?? () {
-          // Default: Use GoRouter to navigate to recipe detail
           context.push(AppRouter.recipeDetail, extra: recipe);
         },
         child: Column(
@@ -28,22 +27,35 @@ class RecipeCard extends StatelessWidget {
           children: [
             AspectRatio(
               aspectRatio: 16 / 9,
-              child: Image.asset(
-                recipe.imageUrl,  // Changed from Image.network to Image.asset for local assets
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  // Handle asset errors (e.g., file not found) by showing a placeholder
-                  return Container(
-                    color: Colors.grey[300],  // Light gray background
-                    child: Icon(
-                      Icons.image_not_supported,  // Placeholder icon for missing images
-                      size: 50,
-                      color: Colors.grey[600],
-                    ),
-                  );
-                },
-                // Removed loadingBuilder as it's not needed for local assets (they load instantly)
-              ),
+              child: recipe.imageUrl.startsWith('assets/')
+    ? Image.asset(
+        recipe.imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey[300],
+            child: Icon(
+              Icons.image_not_supported,
+              size: 50,
+              color: Colors.grey[600],
+            ),
+          );
+        },
+      )
+    : Image.file(
+        File(recipe.imageUrl),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            color: Colors.grey[300],
+            child: Icon(
+              Icons.image_not_supported,
+              size: 50,
+              color: Colors.grey[600],
+            ),
+          );
+        },
+      ),
             ),
             Padding(
               padding: EdgeInsets.all(8.0),
@@ -63,7 +75,7 @@ class RecipeCard extends StatelessWidget {
                       SizedBox(width: 4),
                       Text('${recipe.duration} min'),
                       SizedBox(width: 16),
-                      Icon(Icons.flag, size: 14),  // Icon for difficulty
+                      Icon(Icons.flag, size: 14),  
                       SizedBox(width: 4),
                       Text(recipe.difficulty),
                     ],
@@ -78,10 +90,10 @@ class RecipeCard extends StatelessWidget {
   }
 }
 
-// --- Widget ResponsiveGrid ---
+
 class ResponsiveGrid extends StatelessWidget {
-  final List<Recipe> recipeList;  // Changed to List<Recipe> for type safety
-  final Function(Recipe)? onRecipeTap;  // Optional callback for recipe tap
+  final List<Recipe> recipeList;  
+  final Function(Recipe)? onRecipeTap; 
 
   const ResponsiveGrid({
     Key? key,
@@ -116,4 +128,3 @@ class ResponsiveGrid extends StatelessWidget {
     }
   }
 }
-// --- End of ResponsiveGrid ---

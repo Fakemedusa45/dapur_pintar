@@ -1,8 +1,10 @@
+import 'dart:io';  // Add this import for File
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dapur_pintar/domain/models/recipe.dart';
 import 'package:dapur_pintar/application/providers/saved_recipes_provider.dart';
 import 'package:dapur_pintar/core/utils/responsive.dart';
+import 'package:go_router/go_router.dart';
 
 class RecipeDetailScreen extends ConsumerWidget {
   final Recipe recipe;
@@ -17,8 +19,17 @@ class RecipeDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(recipe.title),
         actions: [
+          // Edit Button
           IconButton(
-            tooltip: isSaved ? 'Hapus dari simpanan' : 'Simpan resep',  // Added for accessibility
+            tooltip: 'Edit Resep',
+            onPressed: () {
+              context.pushNamed('add-edit-recipe', extra: recipe);  // Use named route
+            },
+            icon: Icon(Icons.edit),
+          ),
+          // Save Button
+          IconButton(
+            tooltip: isSaved ? 'Hapus dari simpanan' : 'Simpan resep',
             onPressed: () async {
               final notifier = ref.read(savedRecipesNotifierProvider.notifier);
               try {
@@ -51,24 +62,37 @@ class RecipeDetailScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(  // Responsive 16:9 aspect ratio for the image
+            AspectRatio(
               aspectRatio: 16 / 9,
-              child: Image.asset(
-                recipe.imageUrl,  // Changed from Image.network to Image.asset for local assets
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  // Handle asset errors (e.g., file not found) by showing a placeholder
-                  return Container(
-                    color: Colors.grey[300],  // Light gray background
-                    child: Icon(
-                      Icons.image_not_supported,  // Placeholder icon for missing images
-                      size: 50,
-                      color: Colors.grey[600],
+              child: recipe.imageUrl.startsWith('assets/')
+                  ? Image.asset(
+                      recipe.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 50,
+                            color: Colors.grey[600],
+                          ),
+                        );
+                      },
+                    )
+                  : Image.file(
+                      File(recipe.imageUrl),
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey[300],
+                          child: Icon(
+                            Icons.image_not_supported,
+                            size: 50,
+                            color: Colors.grey[600],
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-                // Removed loadingBuilder as it's not needed for local assets (they load instantly)
-              ),
             ),
             SizedBox(height: 16),
             Text(

@@ -1,8 +1,6 @@
-// lib/presentation/screens/home_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';  // Add this import
+import 'package:go_router/go_router.dart';  
 import 'package:dapur_pintar/application/providers/home_provider.dart';
 import 'package:dapur_pintar/presentation/widgets/recipe_card.dart';
 import 'package:dapur_pintar/presentation/widgets/filter_bottom_sheet.dart';
@@ -19,7 +17,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
-  // Daftar layar untuk Bottom Navigation Bar
   static final List<Widget> _screens = <Widget>[
     HomeContent(),
     SavedRecipesScreen(),
@@ -27,12 +24,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ];
 
   void _onItemTapped(int index) {
-    // --- PERBAIKAN 1: HAPUS SEMUA context.go() ---
-    // Cukup gunakan setState untuk mengganti layar yang ditampilkan di body
     setState(() {
       _selectedIndex = index;
     });
-    // Use GoRouter to navigate (replace current route)
     switch (index) {
       case 0:
         context.go(AppRouter.home);
@@ -51,32 +45,29 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Dapur Pintar'),
-        backgroundColor: Color(0xFF4CAF50), // Hijau gelap untuk tema dapur segar
-        elevation: 4, // Tambah shadow untuk hiasan
+        backgroundColor: Color(0xFF4CAF50),  
+        elevation: 4, 
         actions: [
-          // Hanya tampilkan tombol filter jika sedang di tab Home (indeks 0)
-          if (_selectedIndex == 0)
-            IconButton(
-              onPressed: () {
-                showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  builder: (context) => FilterBottomSheet(),
-                );
-              },
-              icon: Icon(Icons.filter_alt, color: Colors.white), // Ikon putih untuk kontras
-            ),
+          IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) => FilterBottomSheet(),
+              );
+            },
+            icon: Icon(Icons.filter_alt, color: Colors.white), 
+          ),
         ],
       ),
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFE8F5E8), Color(0xFFF1F8E9)],  // Gradient hijau muda untuk background halus
+            colors: [Color(0xFFE8F5E8), Color(0xFFF1F8E9)], 
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
         ),
-        // Tampilkan layar berdasarkan indeks yang dipilih
         child: _screens[_selectedIndex],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -95,31 +86,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Color(0xFF4CAF50), // Hijau untuk item terpilih
-        unselectedItemColor: Colors.grey, // Abu untuk tidak terpilih
-        backgroundColor: Colors.white, // Background putih dengan shadow
-        elevation: 8, // Tambah shadow
+        selectedItemColor: Color(0xFF4CAF50),  
+        unselectedItemColor: Colors.grey,  
+        backgroundColor: Colors.white, 
+        elevation: 8,  
         onTap: _onItemTapped,
       ),
-
-      // --- PERBAIKAN 2: TAMBAHKAN KEMBALI TOMBOL 'ADD' (CRUD) ---
-      // Hanya tampilkan tombol '+' jika kita berada di tab Home (indeks 0)
-      floatingActionButton: _selectedIndex == 0
-          ? FloatingActionButton(
-              heroTag: 'add_button',
-              onPressed: () {
-                // Navigasi ke halaman Tambah Resep
-                context.push(AppRouter.addRecipe);
-              },
-              backgroundColor: Color(0xFFFF9800), // Warna oranye
-              child: Icon(Icons.add, color: Colors.white),
-            )
-          : null, // Sembunyikan tombol jika tidak di tab Home
+      // Floating Action Button untuk add resep baru (diperbaiki)
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigate ke add recipe screen dengan extra: null (untuk add baru)
+          context.push(AppRouter.addEditRecipe, extra: null);
+        },
+        backgroundColor: Color(0xFF4CAF50),  // Warna hijau sesuai tema
+        child: Icon(Icons.add, color: Colors.white),
+        tooltip: 'Tambah Resep Baru',  // Untuk aksesibilitas
+      ),
     );
   }
 }
 
-class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
+class HomeContent extends ConsumerWidget { 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeNotifierProvider);
@@ -144,10 +131,10 @@ class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
             child: TextField(
               decoration: InputDecoration(
                 hintText: 'Cari resep...',
-                prefixIcon: Icon(Icons.search, color: Color(0xFF4CAF50)), // Ikon hijau
+                prefixIcon: Icon(Icons.search, color: Color(0xFF4CAF50)),  
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none, // Hilangkan border default
+                  borderSide: BorderSide.none,  
                 ),
                 filled: true,
                 fillColor: Colors.white,
@@ -156,9 +143,10 @@ class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
             ),
           ),
           SizedBox(height: 16),
+
           Row(
             children: [
-              Icon(Icons.restaurant_menu, color: Color(0xFFFF9800)),  // Ikon oranye untuk hiasan
+              Icon(Icons.restaurant_menu, color: Color(0xFFFF9800)), 
               SizedBox(width: 8),
               Text(
                 'Resep Terbaru',
@@ -171,14 +159,13 @@ class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
             ],
           ),
           SizedBox(height: 8),
-          // Grid Daftar Resep
           Expanded(
             child: state.filteredRecipes.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.no_food, size: 64, color: Colors.grey),  // Ikon hiasan untuk empty state
+                        Icon(Icons.no_food, size: 64, color: Colors.grey),
                         SizedBox(height: 16),
                         Text(
                           'Tidak ada resep yang ditemukan.',
@@ -190,7 +177,7 @@ class HomeContent extends ConsumerWidget {  // Renamed from _HomeContent
                 : ResponsiveGrid(
                     recipeList: state.filteredRecipes,
                     onRecipeTap: (recipe) {
-                      // Use GoRouter to push to detail (stacks on top)
+                     
                       context.push(AppRouter.recipeDetail, extra: recipe);
                     },
                   ),
