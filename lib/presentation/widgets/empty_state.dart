@@ -4,7 +4,6 @@ class EmptyState extends StatelessWidget {
   final String message;
 
   const EmptyState({Key? key, required this.message}) : super(key: key);
-
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -12,11 +11,7 @@ class EmptyState extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-<<<<<<< HEAD
             Icons.bookmark_border,
-=======
-            Icons.star_border,
->>>>>>> e966c1c (UI DONE KAYANYA)
             size: 64,
             color: Colors.grey,
           ),

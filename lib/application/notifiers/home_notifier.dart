@@ -1,12 +1,14 @@
+// lib/application/providers/home_provider.dart
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dapur_pintar/domain/models/recipe.dart';
 import 'package:dapur_pintar/infrastructure/remote/mock_recipe_repository.dart';
 
-// --- Enum Definisi Tetap Sama ---
+/// --- ENUM DEFINITIONS ---
 enum DifficultyFilter { mudah, sedang, sulit }
 enum CategoryFilter { sarapan, makanSiang, makanMalam, dessert }
 
-// --- Definisi Kelas HomeState DIPERBAIKI ---
+/// --- STATE CLASS ---
 class HomeState {
   final List<Recipe> allRecipes;
   final List<Recipe> filteredRecipes;
@@ -17,8 +19,7 @@ class HomeState {
   final String mustIncludeIngredient;
   final String mustNotIncludeIngredient;
 
-  // Constructor
-  HomeState({
+  const HomeState({
     required this.allRecipes,
     required this.filteredRecipes,
     this.searchQuery = '',
@@ -29,20 +30,14 @@ class HomeState {
     this.mustNotIncludeIngredient = '',
   });
 
-  // Metode copyWith DITAMBAHKAN
+  /// CopyWith with optional null-replacement handling
   HomeState copyWith({
     List<Recipe>? allRecipes,
     List<Recipe>? filteredRecipes,
     String? searchQuery,
-<<<<<<< HEAD
     int? maxDuration,
     DifficultyFilter? difficulty,
     CategoryFilter? category,
-=======
-    Object? maxDuration = _undefined,
-    Object? difficulty = _undefined,
-    Object? category = _undefined,
->>>>>>> e966c1c (UI DONE KAYANYA)
     String? mustIncludeIngredient,
     String? mustNotIncludeIngredient,
   }) {
@@ -50,32 +45,21 @@ class HomeState {
       allRecipes: allRecipes ?? this.allRecipes,
       filteredRecipes: filteredRecipes ?? this.filteredRecipes,
       searchQuery: searchQuery ?? this.searchQuery,
-<<<<<<< HEAD
       maxDuration: maxDuration ?? this.maxDuration,
       difficulty: difficulty ?? this.difficulty,
       category: category ?? this.category,
-=======
-      maxDuration: maxDuration == _undefined ? this.maxDuration : (maxDuration as int?),
-      difficulty: difficulty == _undefined ? this.difficulty : (difficulty as DifficultyFilter?),
-      category: category == _undefined ? this.category : (category as CategoryFilter?),
->>>>>>> e966c1c (UI DONE KAYANYA)
       mustIncludeIngredient: mustIncludeIngredient ?? this.mustIncludeIngredient,
       mustNotIncludeIngredient: mustNotIncludeIngredient ?? this.mustNotIncludeIngredient,
     );
   }
-<<<<<<< HEAD
-=======
-  
-  static const _undefined = Object();
->>>>>>> e966c1c (UI DONE KAYANYA)
 }
-// --- Akhir Definisi Kelas HomeState ---
 
-// --- Kelas HomeNotifier Tetap Sama ---
+/// --- NOTIFIER CLASS ---
 class HomeNotifier extends StateNotifier<HomeState> {
   final MockRecipeRepository _repository;
 
-  HomeNotifier(this._repository) : super(HomeState(allRecipes: [], filteredRecipes: [])) {
+  HomeNotifier(this._repository)
+      : super(const HomeState(allRecipes: [], filteredRecipes: [])) {
     _loadRecipes();
   }
 
@@ -84,6 +68,7 @@ class HomeNotifier extends StateNotifier<HomeState> {
     state = state.copyWith(allRecipes: recipes, filteredRecipes: recipes);
   }
 
+  // === SETTERS ===
   void setSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
     _applyFilters();
@@ -126,10 +111,11 @@ class HomeNotifier extends StateNotifier<HomeState> {
     _applyFilters();
   }
 
+  // === CRUD ===
   void addRecipe(Recipe recipe) {
     _repository.addRecipe(recipe);
-    _loadRecipes(); // Muat ulang daftar resep
-    _applyFilters(); // Terapkan filter yang mungkin sedang aktif
+    _loadRecipes();
+    _applyFilters();
   }
 
   void updateRecipe(Recipe recipe) {
@@ -144,51 +130,69 @@ class HomeNotifier extends StateNotifier<HomeState> {
     _applyFilters();
   }
 
+  // === FILTER LOGIC ===
   void _applyFilters() {
     List<Recipe> results = state.allRecipes;
 
+    // 🔍 Filter by search query
     if (state.searchQuery.isNotEmpty) {
-      results = results.where((r) => r.title.toLowerCase().contains(state.searchQuery.toLowerCase())).toList();
+      final query = state.searchQuery.toLowerCase();
+      results = results
+          .where((r) => r.title.toLowerCase().contains(query))
+          .toList();
     }
 
+    // ⏱️ Filter by duration
     if (state.maxDuration != null) {
       results = results.where((r) => r.duration <= state.maxDuration!).toList();
     }
 
+    // 🧩 Filter by difficulty
     if (state.difficulty != null) {
-      String difficultyString = '';
-      switch (state.difficulty) {
-        case DifficultyFilter.mudah: difficultyString = 'Mudah'; break;
-        case DifficultyFilter.sedang: difficultyString = 'Sedang'; break;
-        case DifficultyFilter.sulit: difficultyString = 'Sulit'; break;
-        default: break;
-      }
+      final difficultyString = switch (state.difficulty!) {
+        DifficultyFilter.mudah => 'Mudah',
+        DifficultyFilter.sedang => 'Sedang',
+        DifficultyFilter.sulit => 'Sulit',
+      };
       results = results.where((r) => r.difficulty == difficultyString).toList();
     }
 
+    // 🍽️ Filter by category
     if (state.category != null) {
-      String categoryString = '';
-      switch (state.category) {
-        case CategoryFilter.sarapan: categoryString = 'Sarapan'; break;
-        case CategoryFilter.makanSiang: categoryString = 'Makan Siang'; break;
-        case CategoryFilter.makanMalam: categoryString = 'Makan Malam'; break;
-        case CategoryFilter.dessert: categoryString = 'Dessert'; break;
-        default: break;
-      }
+      final categoryString = switch (state.category!) {
+        CategoryFilter.sarapan => 'Sarapan',
+        CategoryFilter.makanSiang => 'Makan Siang',
+        CategoryFilter.makanMalam => 'Makan Malam',
+        CategoryFilter.dessert => 'Dessert',
+      };
       results = results.where((r) => r.category == categoryString).toList();
     }
 
+    // 🧂 Filter by must-include ingredient
     if (state.mustIncludeIngredient.isNotEmpty) {
-      final lowerIngredient = state.mustIncludeIngredient.toLowerCase();
-      results = results.where((r) => r.ingredients.any((ing) => ing.toLowerCase().contains(lowerIngredient))).toList();
+      final include = state.mustIncludeIngredient.toLowerCase();
+      results = results
+          .where((r) => r.ingredients.any(
+              (ing) => ing.toLowerCase().contains(include)))
+          .toList();
     }
 
+    // 🚫 Filter by must-not-include ingredient
     if (state.mustNotIncludeIngredient.isNotEmpty) {
-      final lowerIngredient = state.mustNotIncludeIngredient.toLowerCase();
-      results = results.where((r) => !r.ingredients.any((ing) => ing.toLowerCase().contains(lowerIngredient))).toList();
+      final exclude = state.mustNotIncludeIngredient.toLowerCase();
+      results = results
+          .where((r) => !r.ingredients.any(
+              (ing) => ing.toLowerCase().contains(exclude)))
+          .toList();
     }
 
+    // ✅ Update state
     state = state.copyWith(filteredRecipes: results);
   }
 }
-// --- Akhir Kelas HomeNotifier ---
+
+/// --- PROVIDER ---
+final homeNotifierProvider =
+    StateNotifierProvider<HomeNotifier, HomeState>((ref) {
+  return HomeNotifier(MockRecipeRepository());
+});
