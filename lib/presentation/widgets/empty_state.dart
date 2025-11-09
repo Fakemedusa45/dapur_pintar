@@ -12,7 +12,11 @@ class EmptyState extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
+<<<<<<< HEAD
             Icons.bookmark_border,
+=======
+            Icons.star_border,
+>>>>>>> e966c1c (UI DONE KAYANYA)
             size: 64,
             color: Colors.grey,
           ),

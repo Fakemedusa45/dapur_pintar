@@ -34,9 +34,15 @@ class HomeState {
     List<Recipe>? allRecipes,
     List<Recipe>? filteredRecipes,
     String? searchQuery,
+<<<<<<< HEAD
     int? maxDuration,
     DifficultyFilter? difficulty,
     CategoryFilter? category,
+=======
+    Object? maxDuration = _undefined,
+    Object? difficulty = _undefined,
+    Object? category = _undefined,
+>>>>>>> e966c1c (UI DONE KAYANYA)
     String? mustIncludeIngredient,
     String? mustNotIncludeIngredient,
   }) {
@@ -44,13 +50,24 @@ class HomeState {
       allRecipes: allRecipes ?? this.allRecipes,
       filteredRecipes: filteredRecipes ?? this.filteredRecipes,
       searchQuery: searchQuery ?? this.searchQuery,
+<<<<<<< HEAD
       maxDuration: maxDuration ?? this.maxDuration,
       difficulty: difficulty ?? this.difficulty,
       category: category ?? this.category,
+=======
+      maxDuration: maxDuration == _undefined ? this.maxDuration : (maxDuration as int?),
+      difficulty: difficulty == _undefined ? this.difficulty : (difficulty as DifficultyFilter?),
+      category: category == _undefined ? this.category : (category as CategoryFilter?),
+>>>>>>> e966c1c (UI DONE KAYANYA)
       mustIncludeIngredient: mustIncludeIngredient ?? this.mustIncludeIngredient,
       mustNotIncludeIngredient: mustNotIncludeIngredient ?? this.mustNotIncludeIngredient,
     );
   }
+<<<<<<< HEAD
+=======
+  
+  static const _undefined = Object();
+>>>>>>> e966c1c (UI DONE KAYANYA)
 }
 // --- Akhir Definisi Kelas HomeState ---
 
