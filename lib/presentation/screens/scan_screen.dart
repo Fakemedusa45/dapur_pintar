@@ -244,7 +244,8 @@ class _ScanContent extends ConsumerWidget {
   }
 
   Widget _buildResults(
-      BuildContext context, WidgetRef ref, List<String> ingredients) {
+      BuildContext context, WidgetRef ref, List<String> ingredients
+      ) {
     final width = MediaQuery.of(context).size.width;
 
     return Padding(
