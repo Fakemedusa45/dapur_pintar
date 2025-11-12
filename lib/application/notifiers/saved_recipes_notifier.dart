@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dapur_pintar/domain/models/recipe.dart';
 import 'package:dapur_pintar/infrastructure/local/recipe_local_repository.dart';
 
-// --- Definisi Kelas SavedRecipesState DIPERBAIKI ---
+/// --- STATE CLASS ---
 class SavedRecipesState {
   final List<Recipe> savedRecipes;
   final bool isLoading;
@@ -12,7 +12,6 @@ class SavedRecipesState {
     this.isLoading = false,
   });
 
-  // Metode copyWith DITAMBAHKAN
   SavedRecipesState copyWith({
     List<Recipe>? savedRecipes,
     bool? isLoading,
@@ -23,13 +22,13 @@ class SavedRecipesState {
     );
   }
 }
-// --- Akhir Definisi Kelas SavedRecipesState ---
 
-// --- Kelas SavedRecipesNotifier Tetap Sama ---
+/// --- STATE NOTIFIER ---
 class SavedRecipesNotifier extends StateNotifier<SavedRecipesState> {
   final RecipeLocalRepository _repository;
 
-  SavedRecipesNotifier(this._repository) : super(SavedRecipesState(savedRecipes: [])) {
+  SavedRecipesNotifier(this._repository)
+      : super(SavedRecipesState(savedRecipes: [])) {
     loadSavedRecipes();
   }
 
@@ -40,14 +39,14 @@ class SavedRecipesNotifier extends StateNotifier<SavedRecipesState> {
       state = state.copyWith(savedRecipes: recipes, isLoading: false);
     } catch (e) {
       print('Error loading saved recipes: $e');
-      state = state.copyWith(isLoading: false); 
+      state = state.copyWith(isLoading: false);
     }
   }
 
   Future<void> saveRecipe(Recipe recipe) async {
     try {
       await _repository.saveRecipe(recipe);
-      await loadSavedRecipes(); 
+      await loadSavedRecipes();
     } catch (e) {
       print('Error saving recipe: $e');
     }
@@ -56,9 +55,21 @@ class SavedRecipesNotifier extends StateNotifier<SavedRecipesState> {
   Future<void> removeRecipe(String id) async {
     try {
       await _repository.removeRecipe(id);
-      await loadSavedRecipes(); // Refresh list
+      await loadSavedRecipes();
     } catch (e) {
       print('Error removing recipe: $e');
+    }
+  }
+
+  Future<void> updateRecipe(Recipe updatedRecipe) async {
+    try {
+      await _repository.updateRecipe(updatedRecipe);
+      final updatedList = state.savedRecipes.map((recipe) {
+        return recipe.id == updatedRecipe.id ? updatedRecipe : recipe;
+      }).toList();
+      state = state.copyWith(savedRecipes: updatedList);
+    } catch (e) {
+      print('Error updating saved recipe: $e');
     }
   }
 
@@ -71,4 +82,3 @@ class SavedRecipesNotifier extends StateNotifier<SavedRecipesState> {
     }
   }
 }
-// --- Akhir Kelas SavedRecipesNotifier ---

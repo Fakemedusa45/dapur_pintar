@@ -9,7 +9,6 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
   @override
   ConsumerState<FilterBottomSheet> createState() => _FilterBottomSheetState();
 }
-
 class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late TextEditingController _mustIncludeController;
   late TextEditingController _mustNotIncludeController;
@@ -19,8 +18,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     super.initState();
     _mustIncludeController = TextEditingController();
     _mustNotIncludeController = TextEditingController();
-
-    // Inisialisasi teks awal setelah widget dibangun
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final state = ref.read(homeNotifierProvider);
@@ -40,8 +37,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(homeNotifierProvider);
-
-    // Sinkronisasi controller dengan state
     if (_mustIncludeController.text != state.mustIncludeIngredient) {
       _mustIncludeController.text = state.mustIncludeIngredient;
     }
@@ -68,7 +63,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // === WAKTU MEMASAK ===
                       _buildSectionHeader(
                         icon: Icons.access_time,
                         title: 'Waktu Memasak',
@@ -107,8 +101,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       ),
 
                       const SizedBox(height: 24),
-
-                      // === TINGKAT KESULITAN ===
                       _buildSectionHeader(
                         icon: Icons.flag,
                         title: 'Tingkat Kesulitan',
@@ -161,8 +153,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       ),
 
                       const SizedBox(height: 24),
-
-                      // === KATEGORI ===
                       _buildSectionHeader(
                         icon: Icons.category,
                         title: 'Kategori',
@@ -225,8 +215,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       ),
 
                       const SizedBox(height: 24),
-
-                      // === FILTER BAHAN ===
                       _buildSectionHeader(
                         icon: Icons.restaurant,
                         title: 'Filter Bahan',
@@ -256,8 +244,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                       ),
 
                       const SizedBox(height: 24),
-
-                      // === RESET BUTTON ===
                       _buildResetButton(context),
                       const SizedBox(height: 24),
                     ],
@@ -270,9 +256,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       ),
     );
   }
-
-  // === UI Helper Widgets ===
-
   Widget _buildHandleBar() => Container(
         margin: const EdgeInsets.only(top: 12, bottom: 8),
         width: 40,

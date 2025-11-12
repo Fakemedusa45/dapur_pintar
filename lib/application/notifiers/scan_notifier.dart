@@ -1,22 +1,15 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// HAPUS import 'package:camera/camera.dart';
 import 'package:http/http.dart' as http;
-import 'package:image_picker/image_picker.dart'; // <-- TAMBAHKAN
-
-// --- Definisi Kelas ScanState (Modifikasi) ---
+import 'package:image_picker/image_picker.dart';
 class ScanState {
-  // HAPUS final List<CameraDescription> cameras;
-  // HAPUS final CameraController? controller;
   final bool isProcessing;
   final List<String>? detectedIngredients;
   final String? error;
   final List<XFile> capturedImages;
 
   ScanState({
-    // HAPUS this.cameras = const [],
-    // HAPUS this.controller,
     this.isProcessing = false,
     this.detectedIngredients,
     this.error,
@@ -24,16 +17,13 @@ class ScanState {
   });
 
   ScanState copyWith({
-    // HAPUS List<CameraDescription>? cameras,
-    // HAPUS CameraController? controller,
     bool? isProcessing,
     List<String>? detectedIngredients,
     String? error,
     List<XFile>? capturedImages,
   }) {
     return ScanState(
-      // HAPUS cameras: cameras ?? this.cameras,
-      // HAPUS controller: controller ?? this.controller,
+    
       isProcessing: isProcessing ?? this.isProcessing,
       detectedIngredients: detectedIngredients ?? this.detectedIngredients,
       error: error,
@@ -41,24 +31,12 @@ class ScanState {
     );
   }
 }
-// --- Akhir Definisi Kelas ScanState ---
-
-// --- Kelas ScanNotifier ---
 class ScanNotifier extends StateNotifier<ScanState> {
-  // HAPUS constructor
   ScanNotifier() : super(ScanState());
-  // HAPUS inisialisasi kamera
-
-  // TAMBAHKAN ImagePicker
   final ImagePicker _picker = ImagePicker();
 
   static const String BASE_URL =
       'https://GalaxionZero-raw-indonesian-food-detection.hf.space';
-
-  // HAPUS initializeCamera()
-  // HAPUS takePicture()
-
-  // TAMBAHKAN pickImage (Mirip Add/Edit Screen)
   Future<void> pickImage(ImageSource source) async {
     try {
       final XFile? image = await _picker.pickImage(
@@ -68,7 +46,6 @@ class ScanNotifier extends StateNotifier<ScanState> {
       );
 
       if (image != null) {
-        // Ini bedanya: kita MENAMBAHKAN ke list, bukan mengganti
         final updatedImages = List<XFile>.from(state.capturedImages)..add(image);
         state = state.copyWith(capturedImages: updatedImages);
       }
@@ -76,16 +53,10 @@ class ScanNotifier extends StateNotifier<ScanState> {
       state = state.copyWith(error: 'Gagal memilih gambar: ${e.toString()}');
     }
   }
-  // --- AKHIR FUNGSI pickImage ---
-
-  // Process a single image and return the top prediction
   Future<String?> _classifySingleImage(File imageFile) async {
     try {
-      // Read and encode image
       List<int> imageBytes = await imageFile.readAsBytes();
       String base64Image = base64Encode(imageBytes);
-
-      // Step 1: Call the predict endpoint
       var callUrl = Uri.parse('$BASE_URL/gradio_api/call/predict');
       var requestBody = json.encode({
         "data": [
@@ -108,11 +79,8 @@ class ScanNotifier extends StateNotifier<ScanState> {
       if (callResponse.statusCode != 200) {
         throw Exception('Call failed: ${callResponse.statusCode}');
       }
-
       var callResult = json.decode(callResponse.body);
       String eventId = callResult['event_id'];
-
-      // Step 2: Stream the result
       var resultUrl = Uri.parse('$BASE_URL/gradio_api/call/predict/$eventId');
       var request = http.Request('GET', resultUrl);
       var streamedResponse = await request.send().timeout(Duration(seconds: 60));
@@ -120,8 +88,6 @@ class ScanNotifier extends StateNotifier<ScanState> {
       if (streamedResponse.statusCode != 200) {
         throw Exception('Stream failed: ${streamedResponse.statusCode}');
       }
-
-      // Step 3: Read stream and extract top prediction
       await for (var chunk in streamedResponse.stream.transform(utf8.decoder)) {
         var lines = chunk.split('\n');
         for (var line in lines) {
@@ -138,8 +104,6 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
               if (firstItem is Map && firstItem.containsKey('confidences')) {
                 var confidences = firstItem['confidences'] as List;
-
-                // Find the highest confidence prediction
                 double maxConfidence = 0.0;
                 String topLabel = '';
 
@@ -151,7 +115,7 @@ class ScanNotifier extends StateNotifier<ScanState> {
                   }
                 }
 
-                return topLabel; // Return the top prediction
+                return topLabel; 
               }
             }
           } catch (e) {
@@ -162,12 +126,10 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
       throw Exception('No result found in stream');
     } catch (e) {
-      print('❌ Classification error: $e');
+      print('Classification error: $e');
       return null;
     }
   }
-
-  // Process all captured images
   Future<void> processImages() async {
     if (state.capturedImages.isEmpty) return;
 
@@ -175,8 +137,6 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
     try {
       List<String> detectedIngredients = [];
-
-      // Process each image sequentially
       for (var xfile in state.capturedImages) {
         final imageFile = File(xfile.path);
         final prediction = await _classifySingleImage(imageFile);
@@ -189,14 +149,12 @@ class ScanNotifier extends StateNotifier<ScanState> {
       if (detectedIngredients.isEmpty) {
         throw Exception('No ingredients detected');
       }
-
-      // Remove duplicates
       detectedIngredients = detectedIngredients.toSet().toList();
 
       state = state.copyWith(
         isProcessing: false,
         detectedIngredients: detectedIngredients,
-        capturedImages: [], // Clear the list after processing
+        capturedImages: [],
       );
     } catch (e) {
       state = state.copyWith(
@@ -207,8 +165,8 @@ class ScanNotifier extends StateNotifier<ScanState> {
   }
 
   void resetDetection() {
-    state = state.copyWith(detectedIngredients: null, capturedImages: []);
-  }
+ state = ScanState();
+}
 
   void removeImage(int index) {
     if (index < 0 || index >= state.capturedImages.length) return;
@@ -219,8 +177,6 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
   @override
   void dispose() {
-    // HAPUS controller.dispose()
     super.dispose();
   }
 }
-// --- Akhir Kelas ScanNotifier ---

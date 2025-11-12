@@ -10,7 +10,6 @@ enum CategoryFilter { sarapan, makanSiang, makanMalam, dessert }
 
 /// --- STATE CLASS ---
 class HomeState {
-
   final String searchQuery;
   final int? maxDuration;
   final DifficultyFilter? difficulty;
@@ -18,6 +17,7 @@ class HomeState {
   final String mustIncludeIngredient;
   final String mustNotIncludeIngredient;
   final List<String> scannedIngredients;
+  final List<Recipe> recipes; // Tambahkan field ini untuk menyimpan list resep
 
   const HomeState({
     this.searchQuery = '',
@@ -27,6 +27,7 @@ class HomeState {
     this.mustIncludeIngredient = '',
     this.mustNotIncludeIngredient = '',
     this.scannedIngredients = const [],
+    this.recipes = const [], // Default kosong
   });
 
   /// CopyWith with optional null-replacement handling
@@ -38,6 +39,7 @@ class HomeState {
     String? mustIncludeIngredient,
     String? mustNotIncludeIngredient,
     List<String>? scannedIngredients,
+    List<Recipe>? recipes, // Tambahkan parameter ini
   }) {
     return HomeState(
       searchQuery: searchQuery ?? this.searchQuery,
@@ -47,20 +49,19 @@ class HomeState {
       mustIncludeIngredient: mustIncludeIngredient ?? this.mustIncludeIngredient,
       mustNotIncludeIngredient: mustNotIncludeIngredient ?? this.mustNotIncludeIngredient,
       scannedIngredients: scannedIngredients ?? this.scannedIngredients,
+      recipes: recipes ?? this.recipes, // Tambahkan ini
     );
   }
 }
 
 /// --- NOTIFIER CLASS (Modifikasi) ---
 class HomeNotifier extends StateNotifier<HomeState> {
-
-  //  REFERENSI COLLECTION FIREBASE
+  // REFERENSI COLLECTION FIREBASE
   final CollectionReference _recipesCollection =
       FirebaseFirestore.instance.collection('recipes');
 
-  HomeNotifier()
-      : super(const HomeState()) {
-    // HAPUS _loadRecipes();
+  HomeNotifier() : super(const HomeState()) {
+    loadRecipes(); // Panggil loadRecipes di constructor
   }
 
   // === SETTERS ===
@@ -107,25 +108,37 @@ class HomeNotifier extends StateNotifier<HomeState> {
     );
   }
 
-  // === CRUD  ===
+  // === CRUD ===
   
   Future<void> addRecipe(Recipe recipe) async {
-    // Model Recipe Anda sudah punya .toJson(), itu sempurna! 
     await _recipesCollection.add(recipe.toJson());
+    await loadRecipes(); // Reload setelah add
   }
 
   Future<void> updateRecipe(Recipe recipe) async {
-    // Gunakan recipe.id untuk update dokumen
     await _recipesCollection.doc(recipe.id).update(recipe.toJson());
+    await loadRecipes(); // Reload setelah update
   }
 
   Future<void> deleteRecipe(String id) async {
-    // Gunakan id untuk hapus dokumen
     await _recipesCollection.doc(id).delete();
+    await loadRecipes(); // Reload setelah delete
   }
 
-  // HAPUS FUNGSI _applyFilters()
-  // Logika filter  dipindahkan ke UI (HomeScreen)
+  // === LOAD RECIPES ===
+  Future<void> loadRecipes() async {
+    try {
+      final snapshot = await _recipesCollection.get();
+      final recipes = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return Recipe.fromJson(data..['id'] = doc.id); // Asumsikan Recipe.fromJson ada
+      }).toList();
+      state = state.copyWith(recipes: recipes);
+    } catch (e) {
+      // Handle error, misalnya log atau snackbar
+      print('Error loading recipes: $e');
+    }
+  }
 }
 
 // --- PROVIDER ---

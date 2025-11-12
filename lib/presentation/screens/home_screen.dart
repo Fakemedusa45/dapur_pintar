@@ -1,16 +1,12 @@
+import 'package:dapur_pintar/application/providers/saved_recipes_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-
-// Providers & Widgets
 import 'package:dapur_pintar/application/providers/home_provider.dart';
 import 'package:dapur_pintar/application/notifiers/home_notifier.dart';
 import 'package:dapur_pintar/application/providers/scan_provider.dart';
 import 'package:dapur_pintar/presentation/widgets/recipe_card.dart';
 import 'package:dapur_pintar/presentation/widgets/filter_bottom_sheet.dart';
-
-// Screens & Routes
 import 'package:dapur_pintar/presentation/routes/app_router.dart';
 import 'package:dapur_pintar/presentation/screens/saved_recipes_screen.dart';
 import 'package:dapur_pintar/presentation/screens/scan_screen.dart';
@@ -28,21 +24,27 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
-  static final List<Widget> _screens = <Widget>[
-    const HomeContent(),
-    SavedRecipesScreen(),
-    const ScanScreen(),
-  ];
+   late List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    _screens = [
+      const HomeContent(),
+      const SavedRecipesScreen(), 
+      const ScanScreen(),
+    ];
+  }
 
   void _onItemTapped(int index) {
-    // --- TAMBAHKAN BLOK INI ---
-    if (index == 2) { // Jika pengguna menekan tab "Pindai"
-      // Reset state scan
+
+    if (index == 1) {  
+  ref.read(savedRecipesNotifierProvider.notifier).loadSavedRecipes(); 
+} 
+    if (index == 2) { 
       ref.read(scanNotifierProvider.notifier).resetDetection();
     }
-    // --- AKHIR TAMBAHAN ---
     setState(() => _selectedIndex = index);
-
     switch (index) {
       case 0:
         context.go(AppRouter.home);
@@ -65,9 +67,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         leading: Padding(
-          padding: const EdgeInsets.all(8.0), // Beri sedikit padding
+          padding: const EdgeInsets.all(8.0), 
           child: Image.asset(
-            'assets/images/logo2.png', // Path ke logo Anda
+            'assets/images/logo2.png', 
           ),
         ),
         title: const Text(
@@ -99,6 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         duration: const Duration(milliseconds: 300),
         child: Container(
           key: ValueKey<int>(_selectedIndex),
+          
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFFE8F5E8), Color(0xFFF1F8E9)],
@@ -162,12 +165,7 @@ class HomeContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeNotifierProvider);
     final width = MediaQuery.of(context).size.width;
-
-    // ---  MEMBUAT QUERY DINAMIS ---
-    // Mulai query dasar
     Query query = FirebaseFirestore.instance.collection('recipes');
-
-    // Terapkan filter dari state
     if (state.maxDuration != null) {
       query = query.where('duration', isLessThanOrEqualTo: state.maxDuration);
     }
@@ -191,26 +189,17 @@ class HomeContent extends ConsumerWidget {
     if (state.mustIncludeIngredient.isNotEmpty) {
       query = query.where('ingredients', arrayContains: state.mustIncludeIngredient.trim());
     }
-    // Catatan: Filter 'mustNotIncludeIngredient' tidak didukung secara
-    // langsung di Firestore ('arrayDoesNotContain'). Kita akan filter manual.
-    // --- AKHIR LOGIKA QUERY ---
-
-    // --- TAMBAHKAN BLOK BARU INI ---
-    // Filter dari hasil scan
     if (state.scannedIngredients.isNotEmpty) {
       for (final ingredient in state.scannedIngredients) {
-        // Kita tambahkan filter array-contains untuk SETIAP bahan
+        
         query = query.where('ingredients', arrayContains: ingredient.trim());
       }
     }
-    // --- AKHIR BLOK BARU ---
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Search Bar
           Container(
             margin: const EdgeInsets.only(top: 16, bottom: 20),
             decoration: BoxDecoration(
@@ -255,8 +244,6 @@ class HomeContent extends ConsumerWidget {
                   ref.read(homeNotifierProvider.notifier).setSearchQuery(value),
             ),
           ),
-
-          // Section Title
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
@@ -305,20 +292,12 @@ class HomeContent extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
-
-          // --- PANGGIL WIDGET BARU DI SINI ---
           if (state.scannedIngredients.isNotEmpty)
             _buildScannedIngredients(ref, state.scannedIngredients, width),
-          // --- AKHIR PANGGILAN WIDGET ---
-
-          // --- GANTI EXPANDED INI ---
           Expanded(
-            // Ganti 'state.filteredRecipes.isEmpty' dengan StreamBuilder
             child: StreamBuilder<QuerySnapshot>(
-              // 3. Gunakan query dinamis yang sudah kita buat
               stream: query.snapshots(),
               builder: (context, snapshot) {
-                // 4. Handle state loading, error, dan data kosong
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)));
                 }
@@ -328,27 +307,18 @@ class HomeContent extends ConsumerWidget {
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return _buildEmptyState(width);
                 }
-
-                // 5. Konversi Dokumen Firestore ke List<Recipe>
                 List<Recipe> recipes = [];
                 for (var doc in snapshot.data!.docs) {
                   final data = doc.data() as Map<String, dynamic>;
-                  // Kita tambahkan ID dokumen ke dalam data
-                  // agar model Recipe.fromJson bisa membacanya
                   final fullData = {
                     ...data,
                     'id': doc.id,
                   };
                   recipes.add(Recipe.fromJson(fullData));
                 }
-
-                // 6. Terapkan filter manual (yang tidak bisa dilakukan Firestore)
                 final filteredRecipes = recipes.where((recipe) {
-                  // Filter 'searchQuery' (contains)
                   final titleMatch = state.searchQuery.isEmpty ||
                       recipe.title.toLowerCase().contains(state.searchQuery.toLowerCase());
-
-                  // Filter 'mustNotIncludeIngredient'
                   final excludeMatch = state.mustNotIncludeIngredient.isEmpty ||
                       !recipe.ingredients.any((ing) => 
                           ing.toLowerCase().contains(state.mustNotIncludeIngredient.toLowerCase()));
@@ -360,8 +330,6 @@ class HomeContent extends ConsumerWidget {
                 if (filteredRecipes.isEmpty) {
                   return _buildEmptyState(width);
                 }
-
-                // 7. Tampilkan hasil di ResponsiveGrid
                 return ResponsiveGrid(
                   recipeList: filteredRecipes,
                   onRecipeTap: (recipe) {
@@ -412,7 +380,6 @@ class HomeContent extends ConsumerWidget {
   }
 }
 
-// LETAKKAN INI DI BAWAH WIDGET HomeContent
 Widget _buildScannedIngredients(
     WidgetRef ref, List<String> ingredients, double width) {
   return Container(
@@ -444,14 +411,12 @@ Widget _buildScannedIngredients(
                 color: const Color(0xFF2E7D32),
               ),
             ),
-            // Tombol "Clear"
             TextButton(
               style: TextButton.styleFrom(
                 padding: EdgeInsets.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               onPressed: () {
-                // Reset filter scan
                 ref.read(homeNotifierProvider.notifier).setScannedIngredients([]);
               },
               child: const Text('Hapus'),
@@ -459,7 +424,6 @@ Widget _buildScannedIngredients(
           ],
         ),
         const SizedBox(height: 8),
-        // Daftar Chip
         Wrap(
           spacing: 8,
           runSpacing: 4,

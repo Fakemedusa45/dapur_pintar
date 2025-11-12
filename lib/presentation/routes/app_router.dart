@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:dapur_pintar/presentation/screens/home_screen.dart';
 import 'package:dapur_pintar/presentation/screens/scan_screen.dart';
 import 'package:dapur_pintar/presentation/screens/saved_recipes_screen.dart';
-import 'package:dapur_pintar/presentation/screens/recipe_detail_screen.dart';  // Ensure this import is correct
+import 'package:dapur_pintar/presentation/screens/recipe_detail_screen.dart';
 import 'package:dapur_pintar/presentation/screens/add_edit_recipe_screen.dart';
 import 'package:dapur_pintar/domain/models/recipe.dart';
 
@@ -20,29 +20,32 @@ class AppRouter {
       GoRoute(
         path: home,
         name: 'home',
-        pageBuilder: (context, state) => MaterialPage(child: HomeScreen()),
+        pageBuilder: (context, state) => const MaterialPage(child: HomeScreen()),
       ),
       GoRoute(
         path: scan,
         name: 'scan',
-        pageBuilder: (context, state) => MaterialPage(child: ScanScreen()),
+        pageBuilder: (context, state) => const MaterialPage(child: ScanScreen()),
       ),
       GoRoute(
         path: saved,
         name: 'saved',
-        pageBuilder: (context, state) =>  MaterialPage(child: SavedRecipesScreen()),
+        pageBuilder: (context, state) =>
+            const MaterialPage(child: SavedRecipesScreen()),
       ),
       GoRoute(
         path: recipeDetail,
-        name: 'detail',
+        name: 'recipe-detail',
         pageBuilder: (context, state) {
-          final Recipe? recipe = state.extra as Recipe?;  // Explicit typing
+          final Recipe? recipe = state.extra as Recipe?;
           if (recipe == null) {
             return const MaterialPage(
-              child: Scaffold(body: Center(child: Text('Recipe not found'))),
+              child: Scaffold(
+                body: Center(child: Text('Recipe not found')),
+              ),
             );
           }
-          return MaterialPage(child: RecipeDetailScreen(recipe: recipe));  // Ensure this resolves
+          return MaterialPage(child: RecipeDetailScreen(recipe: recipe));
         },
       ),
       GoRoute(

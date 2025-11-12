@@ -3,17 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-
-// Providers & Notifiers
 import 'package:dapur_pintar/application/providers/scan_provider.dart';
 import 'package:dapur_pintar/application/notifiers/scan_notifier.dart';
 import 'package:dapur_pintar/application/providers/home_provider.dart';
-
-// Screens & Routing
 import 'package:dapur_pintar/presentation/routes/app_router.dart';
 import 'package:dapur_pintar/presentation/screens/home_screen.dart';
 import 'package:dapur_pintar/presentation/screens/saved_recipes_screen.dart';
-
 class ScanScreen extends ConsumerStatefulWidget {
   const ScanScreen({super.key});
 
@@ -23,21 +18,16 @@ class ScanScreen extends ConsumerStatefulWidget {
 
 class _ScanScreenState extends ConsumerState<ScanScreen> {
   int _selectedIndex = 2;
-
   static final List<Widget> _screens = <Widget>[
-    HomeContent(),
-    SavedContent(),
-    _ScanContent(),
+    const HomeContent(),
+    const SavedRecipesScreen(),
+    const _ScanContent(),
   ];
-
   void _onItemTapped(int index) {
-    // --- TAMBAHKAN BLOK INI ---
-    if (index == 2) { // Jika pengguna menekan tab "Pindai"
-      // Reset state scan
+   
+    if (index == 2) { 
       ref.read(scanNotifierProvider.notifier).resetDetection();
     }
-    // --- AKHIR TAMBAHAN ---
-
     setState(() => _selectedIndex = index);
 
     switch (index) {
@@ -103,7 +93,6 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     );
   }
 }
-
 class _ScanContent extends ConsumerWidget {
   const _ScanContent();
 
@@ -138,15 +127,8 @@ class _ScanContent extends ConsumerWidget {
     if (state.detectedIngredients != null) {
       return _buildResults(context, ref, state.detectedIngredients!);
     }
-
-    // GANTI return _buildCaptureView(...)
     return _buildPickerView(context, ref, state, width);
   }
-
-  // HAPUS SELURUH WIDGET _buildCaptureView
-  // ...
-
-  // TAMBAHKAN WIDGET BARU _buildPickerView
   Widget _buildPickerView(
       BuildContext context, WidgetRef ref, ScanState state, double width) {
     return Container(
@@ -161,7 +143,6 @@ class _ScanContent extends ConsumerWidget {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          // 1. Tombol Pilihan
           Row(
             children: [
               Expanded(
@@ -202,15 +183,11 @@ class _ScanContent extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 24),
-
-          // 2. Judul "Foto Dipilih"
           Text(
             'Bahan untuk dipindai:',
             style: TextStyle(fontSize: width * 0.045, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-
-          // 3. List Thumbnail
           if (state.capturedImages.isEmpty)
             Expanded(
               child: Center(
@@ -229,9 +206,8 @@ class _ScanContent extends ConsumerWidget {
               ),
             )
           else
-            // Container untuk menampung Listview
             Container(
-              height: width * 0.3, // Beri tinggi agar tidak error
+              height: width * 0.3, 
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: state.capturedImages.length,
@@ -277,11 +253,7 @@ class _ScanContent extends ConsumerWidget {
                 },
               ),
             ),
-
-          // Spacer agar tombol "Pindai" ke bawah
           const Spacer(), 
-
-          // 4. Tombol Proses
           if (state.capturedImages.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -305,13 +277,9 @@ class _ScanContent extends ConsumerWidget {
       ),
     );
   }
-  // --- AKHIR WIDGET _buildPickerView ---
-
-  // Widget _buildResults tetap sama
   Widget _buildResults(
       BuildContext context, WidgetRef ref, List<String> ingredients) {
     final width = MediaQuery.of(context).size.width;
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: width * 0.08),
       child: Column(
@@ -342,6 +310,52 @@ class _ScanContent extends ConsumerWidget {
                 .toList(),
           ),
           const SizedBox(height: 32),
+          GestureDetector(
+  onTap: () {
+    ref.read(scanNotifierProvider.notifier).resetDetection();
+  },
+  child: AnimatedContainer(
+    duration: const Duration(milliseconds: 250),
+    curve: Curves.easeOutCubic,
+    padding: EdgeInsets.symmetric(
+      horizontal: width * 0.12,
+      vertical: width * 0.045,
+    ),
+    decoration: BoxDecoration(
+     gradient: const LinearGradient(
+  colors: [Color(0xFFFFD54F), Color(0xFFFFB300)], 
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+),
+boxShadow: [
+  BoxShadow(
+    color: Colors.orangeAccent.withOpacity(0.4),
+    blurRadius: 10,
+    offset: const Offset(0, 4),
+  ),
+],
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.refresh, color: Colors.white, size: 22),
+        const SizedBox(width: 8),
+        const Text(
+          'Scan Lagi',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    ),
+  ),
+),
+          const SizedBox(height: 16),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4CAF50),
@@ -354,18 +368,11 @@ class _ScanContent extends ConsumerWidget {
               ),
             ),
             onPressed: () {
-              // final ingredientString = ingredients.join(', ');
               ref
                   .read(homeNotifierProvider.notifier)
                   .setScannedIngredients(ingredients);
               ref.read(scanNotifierProvider.notifier).resetDetection();
-              
-              // Pergi ke Home Screen
               context.go(AppRouter.home);
-              
-              // Catatan: Kode Anda sebelumnya menggunakan pushNamedAndRemoveUntil,
-              // tapi karena Anda pakai GoRouter, 'context.go()' sudah
-              // benar untuk mengganti halaman.
             },
             icon: const Icon(Icons.search, color: Colors.white),
             label: const Text(
