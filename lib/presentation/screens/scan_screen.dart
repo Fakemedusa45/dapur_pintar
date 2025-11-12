@@ -1,8 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:camera/camera.dart';
+// HAPUS import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart'; // <-- TAMBAHKAN
 
 // Providers & Notifiers
 import 'package:dapur_pintar/application/providers/scan_provider.dart';
@@ -27,7 +28,7 @@ class _ScanScreenState extends State<ScanScreen> {
   static final List<Widget> _screens = <Widget>[
     HomeContent(),
     SavedContent(),
-    _ScanContent(),
+    _ScanContent(), // Widget ini tetap
   ];
 
   void _onItemTapped(int index) {
@@ -53,9 +54,7 @@ class _ScanScreenState extends State<ScanScreen> {
       appBar: AppBar(
         title: const Text(
           'Pindai Bahan',
-          style: TextStyle(fontWeight: FontWeight.bold, 
-          color: Colors.white,
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
         ),
         centerTitle: true,
         elevation: 2,
@@ -134,25 +133,99 @@ class _ScanContent extends ConsumerWidget {
       return _buildResults(context, ref, state.detectedIngredients!);
     }
 
-    return _buildCaptureView(ref, state, width);
+    // GANTI return _buildCaptureView(...)
+    return _buildPickerView(context, ref, state, width);
   }
 
-  Widget _buildCaptureView(WidgetRef ref, ScanState state, double width) {
-    if (state.controller == null || !state.controller!.value.isInitialized) {
-      return const Center(child: CircularProgressIndicator());
-    }
+  // HAPUS SELURUH WIDGET _buildCaptureView
+  // ...
 
-    return Stack(
-      children: [
-        Positioned.fill(child: CameraPreview(state.controller!)),
+  // TAMBAHKAN WIDGET BARU _buildPickerView
+  Widget _buildPickerView(
+      BuildContext context, WidgetRef ref, ScanState state, double width) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFFE8F5E8), Color(0xFFF1F8E9)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // 1. Tombol Pilihan
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => ref
+                      .read(scanNotifierProvider.notifier)
+                      .pickImage(ImageSource.gallery),
+                  icon: const Icon(Icons.photo_library),
+                  label: const Text('Galeri'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => ref
+                      .read(scanNotifierProvider.notifier)
+                      .pickImage(ImageSource.camera),
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text('Kamera'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF4CAF50),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
 
-        // Thumbnail dari foto yang diambil
-        if (state.capturedImages.isNotEmpty)
-          Align(
-            alignment: Alignment.topCenter,
-            child: Container(
-              height: width * 0.25,
-              margin: const EdgeInsets.only(top: 16),
+          // 2. Judul "Foto Dipilih"
+          Text(
+            'Bahan untuk dipindai:',
+            style: TextStyle(fontSize: width * 0.045, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+
+          // 3. List Thumbnail
+          if (state.capturedImages.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.image_search, size: 60, color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Ambil gambar dari galeri atau kamera',
+                      style: TextStyle(color: Colors.grey[600]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            // Container untuk menampung Listview
+            Container(
+              height: width * 0.3, // Beri tinggi agar tidak error
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: state.capturedImages.length,
@@ -198,56 +271,39 @@ class _ScanContent extends ConsumerWidget {
                 },
               ),
             ),
-          ),
 
-        // Tombol aksi di bawah
-        Align(
-          alignment: Alignment.bottomCenter,
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: width * 0.1,
-              vertical: width * 0.08,
-            ),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.black.withOpacity(0.2),
-                  Colors.transparent,
-                ],
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
+          // Spacer agar tombol "Pindai" ke bawah
+          const Spacer(), 
+
+          // 4. Tombol Proses
+          if (state.capturedImages.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16.0),
+              child: FilledButton.icon(
+                icon: const Icon(Icons.check, color: Colors.white),
+                label: Text('Pindai (${state.capturedImages.length}) Bahan',
+                    style: const TextStyle(color: Colors.white, fontSize: 16)),
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.orangeAccent,
+                  padding: EdgeInsets.symmetric(
+                      horizontal: width * 0.1, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                onPressed: () =>
+                    ref.read(scanNotifierProvider.notifier).processImages(),
               ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                FloatingActionButton(
-                  heroTag: 'capture',
-                  backgroundColor: const Color(0xFF4CAF50),
-                  onPressed: () =>
-                      ref.read(scanNotifierProvider.notifier).takePicture(),
-                  child: const Icon(Icons.camera_alt, color: Colors.white),
-                ),
-                if (state.capturedImages.isNotEmpty)
-                  FloatingActionButton(
-                    heroTag: 'process',
-                    backgroundColor: Colors.orangeAccent,
-                    onPressed: () => ref
-                        .read(scanNotifierProvider.notifier)
-                        .processImages(),
-                    child: const Icon(Icons.check, color: Colors.white),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+  // --- AKHIR WIDGET _buildPickerView ---
 
+  // Widget _buildResults tetap sama
   Widget _buildResults(
-      BuildContext context, WidgetRef ref, List<String> ingredients
-      ) {
+      BuildContext context, WidgetRef ref, List<String> ingredients) {
     final width = MediaQuery.of(context).size.width;
 
     return Padding(
@@ -297,11 +353,13 @@ class _ScanContent extends ConsumerWidget {
                   .read(homeNotifierProvider.notifier)
                   .setMustIncludeIngredient(ingredientString);
               ref.read(scanNotifierProvider.notifier).resetDetection();
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                AppRouter.home,
-                (route) => false,
-              );
+              
+              // Pergi ke Home Screen
+              context.go(AppRouter.home);
+              
+              // Catatan: Kode Anda sebelumnya menggunakan pushNamedAndRemoveUntil,
+              // tapi karena Anda pakai GoRouter, 'context.go()' sudah
+              // benar untuk mengganti halaman.
             },
             icon: const Icon(Icons.search, color: Colors.white),
             label: const Text(

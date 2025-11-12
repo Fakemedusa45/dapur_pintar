@@ -115,7 +115,7 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
     if (shouldDelete == true) {
       final notifier = ref.read(homeNotifierProvider.notifier);
       await notifier.deleteRecipe(widget.recipe!.id);
-      if (context.mounted) context.pop();
+      if (context.mounted) context.goNamed('home');
     }
   }
 

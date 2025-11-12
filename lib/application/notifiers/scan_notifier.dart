@@ -1,21 +1,22 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:camera/camera.dart';
+// HAPUS import 'package:camera/camera.dart';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart'; // <-- TAMBAHKAN
 
-// --- Definisi Kelas ScanState ---
+// --- Definisi Kelas ScanState (Modifikasi) ---
 class ScanState {
-  final List<CameraDescription> cameras;
-  final CameraController? controller;
+  // HAPUS final List<CameraDescription> cameras;
+  // HAPUS final CameraController? controller;
   final bool isProcessing;
   final List<String>? detectedIngredients;
   final String? error;
   final List<XFile> capturedImages;
 
   ScanState({
-    this.cameras = const [],
-    this.controller,
+    // HAPUS this.cameras = const [],
+    // HAPUS this.controller,
     this.isProcessing = false,
     this.detectedIngredients,
     this.error,
@@ -23,16 +24,16 @@ class ScanState {
   });
 
   ScanState copyWith({
-    List<CameraDescription>? cameras,
-    CameraController? controller,
+    // HAPUS List<CameraDescription>? cameras,
+    // HAPUS CameraController? controller,
     bool? isProcessing,
     List<String>? detectedIngredients,
     String? error,
     List<XFile>? capturedImages,
   }) {
     return ScanState(
-      cameras: cameras ?? this.cameras,
-      controller: controller ?? this.controller,
+      // HAPUS cameras: cameras ?? this.cameras,
+      // HAPUS controller: controller ?? this.controller,
       isProcessing: isProcessing ?? this.isProcessing,
       detectedIngredients: detectedIngredients ?? this.detectedIngredients,
       error: error,
@@ -44,37 +45,38 @@ class ScanState {
 
 // --- Kelas ScanNotifier ---
 class ScanNotifier extends StateNotifier<ScanState> {
-  ScanNotifier() : super(ScanState()) {
-    initializeCamera();
-  }
+  // HAPUS constructor
+  ScanNotifier() : super(ScanState());
+  // HAPUS inisialisasi kamera
 
-  static const String BASE_URL = 'https://GalaxionZero-raw-indonesian-food-detection.hf.space';
+  // TAMBAHKAN ImagePicker
+  final ImagePicker _picker = ImagePicker();
 
-  Future<void> initializeCamera() async {
+  static const String BASE_URL =
+      'https://GalaxionZero-raw-indonesian-food-detection.hf.space';
+
+  // HAPUS initializeCamera()
+  // HAPUS takePicture()
+
+  // TAMBAHKAN pickImage (Mirip Add/Edit Screen)
+  Future<void> pickImage(ImageSource source) async {
     try {
-      final cameras = await availableCameras();
-      if (cameras.isEmpty) return;
+      final XFile? image = await _picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
 
-      final controller = CameraController(cameras.first, ResolutionPreset.medium);
-      await controller.initialize();
-
-      state = state.copyWith(cameras: cameras, controller: controller);
+      if (image != null) {
+        // Ini bedanya: kita MENAMBAHKAN ke list, bukan mengganti
+        final updatedImages = List<XFile>.from(state.capturedImages)..add(image);
+        state = state.copyWith(capturedImages: updatedImages);
+      }
     } catch (e) {
-      state = state.copyWith(error: e.toString());
+      state = state.copyWith(error: 'Gagal memilih gambar: ${e.toString()}');
     }
   }
-
-  Future<void> takePicture() async {
-    if (state.controller == null) return;
-
-    try {
-      final image = await state.controller!.takePicture();
-      final updatedImages = List<XFile>.from(state.capturedImages)..add(image);
-      state = state.copyWith(capturedImages: updatedImages);
-    } catch (e) {
-      state = state.copyWith(error: e.toString());
-    }
-  }
+  // --- AKHIR FUNGSI pickImage ---
 
   // Process a single image and return the top prediction
   Future<String?> _classifySingleImage(File imageFile) async {
@@ -210,13 +212,14 @@ class ScanNotifier extends StateNotifier<ScanState> {
 
   void removeImage(int index) {
     if (index < 0 || index >= state.capturedImages.length) return;
-    final updatedImages = List<XFile>.from(state.capturedImages)..removeAt(index);
+    final updatedImages = List<XFile>.from(state.capturedImages)
+      ..removeAt(index);
     state = state.copyWith(capturedImages: updatedImages);
   }
 
   @override
   void dispose() {
-    state.controller?.dispose();
+    // HAPUS controller.dispose()
     super.dispose();
   }
 }
