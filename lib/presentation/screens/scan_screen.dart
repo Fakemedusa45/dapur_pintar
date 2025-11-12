@@ -53,7 +53,9 @@ class _ScanScreenState extends State<ScanScreen> {
       appBar: AppBar(
         title: const Text(
           'Pindai Bahan',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold, 
+          color: Colors.white,
+          ),
         ),
         centerTitle: true,
         elevation: 2,

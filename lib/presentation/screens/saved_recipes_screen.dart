@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:dapur_pintar/application/providers/saved_recipes_provider.dart';
 import 'package:dapur_pintar/presentation/widgets/recipe_card.dart';
 import 'package:dapur_pintar/presentation/widgets/empty_state.dart';
-import 'package:dapur_pintar/core/utils/responsive.dart';
 import 'package:dapur_pintar/presentation/routes/app_router.dart';
 import 'package:dapur_pintar/presentation/screens/home_screen.dart';
 import 'package:dapur_pintar/presentation/screens/scan_screen.dart';
@@ -55,7 +54,9 @@ class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
       appBar: AppBar(
         title: const Text(
           'Resep Favorit',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold,
+          color: Colors.white,
+          ),
         ),
         centerTitle: true,
         elevation: 2,

@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+
 // Providers & Widgets
 import 'package:dapur_pintar/application/providers/home_provider.dart';
+import 'package:dapur_pintar/application/notifiers/home_notifier.dart';
 import 'package:dapur_pintar/presentation/widgets/recipe_card.dart';
 import 'package:dapur_pintar/presentation/widgets/filter_bottom_sheet.dart';
-import 'package:dapur_pintar/core/utils/responsive.dart';
 
 // Screens & Routes
 import 'package:dapur_pintar/presentation/routes/app_router.dart';
 import 'package:dapur_pintar/presentation/screens/saved_recipes_screen.dart';
 import 'package:dapur_pintar/presentation/screens/scan_screen.dart';
+
+import 'package:cloud_firestore/cloud_firestore.dart'; 
+import 'package:dapur_pintar/domain/models/recipe.dart'; 
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -53,9 +57,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
+        leading: Padding(
+          padding: const EdgeInsets.all(8.0), // Beri sedikit padding
+          child: Image.asset(
+            'assets/images/logo2.png', // Path ke logo Anda
+          ),
+        ),
         title: const Text(
           'Dapur Pintar',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(fontWeight: FontWeight.bold,
+          color: Colors.white,
+          ),
         ),
         backgroundColor: const Color(0xFF4CAF50),
         elevation: 2,
@@ -143,6 +155,38 @@ class HomeContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeNotifierProvider);
     final width = MediaQuery.of(context).size.width;
+
+    // ---  MEMBUAT QUERY DINAMIS ---
+    // Mulai query dasar
+    Query query = FirebaseFirestore.instance.collection('recipes');
+
+    // Terapkan filter dari state
+    if (state.maxDuration != null) {
+      query = query.where('duration', isLessThanOrEqualTo: state.maxDuration);
+    }
+    if (state.difficulty != null) {
+      final difficultyString = switch (state.difficulty!) {
+        DifficultyFilter.mudah => 'Mudah',
+        DifficultyFilter.sedang => 'Sedang',
+        DifficultyFilter.sulit => 'Sulit',
+      };
+      query = query.where('difficulty', isEqualTo: difficultyString);
+    }
+    if (state.category != null) {
+      final categoryString = switch (state.category!) {
+        CategoryFilter.sarapan => 'Sarapan',
+        CategoryFilter.makanSiang => 'Makan Siang',
+        CategoryFilter.makanMalam => 'Makan Malam',
+        CategoryFilter.dessert => 'Dessert',
+      };
+      query = query.where('category', isEqualTo: categoryString);
+    }
+    if (state.mustIncludeIngredient.isNotEmpty) {
+      query = query.where('ingredients', arrayContains: state.mustIncludeIngredient.trim());
+    }
+    // Catatan: Filter 'mustNotIncludeIngredient' tidak didukung secara
+    // langsung di Firestore ('arrayDoesNotContain'). Kita akan filter manual.
+    // --- AKHIR LOGIKA QUERY ---
 
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: 12),
@@ -245,16 +289,65 @@ class HomeContent extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
 
-          // Recipe Grid / Empty State
+          // --- GANTI EXPANDED INI ---
           Expanded(
-            child: state.filteredRecipes.isEmpty
-                ? _buildEmptyState(width)
-                : ResponsiveGrid(
-                    recipeList: state.filteredRecipes,
-                    onRecipeTap: (recipe) {
-                      context.push(AppRouter.recipeDetail, extra: recipe);
-                    },
-                  ),
+            // Ganti 'state.filteredRecipes.isEmpty' dengan StreamBuilder
+            child: StreamBuilder<QuerySnapshot>(
+              // 3. Gunakan query dinamis yang sudah kita buat
+              stream: query.snapshots(),
+              builder: (context, snapshot) {
+                // 4. Handle state loading, error, dan data kosong
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)));
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return _buildEmptyState(width);
+                }
+
+                // 5. Konversi Dokumen Firestore ke List<Recipe>
+                List<Recipe> recipes = [];
+                for (var doc in snapshot.data!.docs) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  // Kita tambahkan ID dokumen ke dalam data
+                  // agar model Recipe.fromJson bisa membacanya
+                  final fullData = {
+                    ...data,
+                    'id': doc.id,
+                  };
+                  recipes.add(Recipe.fromJson(fullData));
+                }
+
+                // 6. Terapkan filter manual (yang tidak bisa dilakukan Firestore)
+                final filteredRecipes = recipes.where((recipe) {
+                  // Filter 'searchQuery' (contains)
+                  final titleMatch = state.searchQuery.isEmpty ||
+                      recipe.title.toLowerCase().contains(state.searchQuery.toLowerCase());
+
+                  // Filter 'mustNotIncludeIngredient'
+                  final excludeMatch = state.mustNotIncludeIngredient.isEmpty ||
+                      !recipe.ingredients.any((ing) => 
+                          ing.toLowerCase().contains(state.mustNotIncludeIngredient.toLowerCase()));
+                  
+                  return titleMatch && excludeMatch;
+                }).toList();
+
+
+                if (filteredRecipes.isEmpty) {
+                  return _buildEmptyState(width);
+                }
+
+                // 7. Tampilkan hasil di ResponsiveGrid
+                return ResponsiveGrid(
+                  recipeList: filteredRecipes,
+                  onRecipeTap: (recipe) {
+                    context.push(AppRouter.recipeDetail, extra: recipe);
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),

@@ -2,16 +2,21 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dapur_pintar/domain/models/recipe.dart';
-import 'package:dapur_pintar/infrastructure/remote/mock_recipe_repository.dart';
+// HAPUS IMPORT MOCK REPO
+// import 'package:dapur_pintar/infrastructure/remote/mock_recipe_repository.dart';
+// TAMBAHKAN IMPORT FIREBASE
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// --- ENUM DEFINITIONS ---
+/// --- ENUM DEFINITIONS (Tetap Sama) ---
 enum DifficultyFilter { mudah, sedang, sulit }
 enum CategoryFilter { sarapan, makanSiang, makanMalam, dessert }
 
-/// --- STATE CLASS ---
+/// --- STATE CLASS (Modifikasi) ---
 class HomeState {
-  final List<Recipe> allRecipes;
-  final List<Recipe> filteredRecipes;
+  // HAPUS KEDUA LIST INI. Data akan datang dari StreamBuilder di UI.
+  // final List<Recipe> allRecipes;
+  // final List<Recipe> filteredRecipes;
+
   final String searchQuery;
   final int? maxDuration;
   final DifficultyFilter? difficulty;
@@ -20,8 +25,9 @@ class HomeState {
   final String mustNotIncludeIngredient;
 
   const HomeState({
-    required this.allRecipes,
-    required this.filteredRecipes,
+    // HAPUS KEDUA LIST INI
+    // required this.allRecipes,
+    // required this.filteredRecipes,
     this.searchQuery = '',
     this.maxDuration,
     this.difficulty,
@@ -32,8 +38,9 @@ class HomeState {
 
   /// CopyWith with optional null-replacement handling
   HomeState copyWith({
-    List<Recipe>? allRecipes,
-    List<Recipe>? filteredRecipes,
+    // HAPUS KEDUA LIST INI
+    // List<Recipe>? allRecipes,
+    // List<Recipe>? filteredRecipes,
     String? searchQuery,
     int? maxDuration,
     DifficultyFilter? difficulty,
@@ -42,8 +49,9 @@ class HomeState {
     String? mustNotIncludeIngredient,
   }) {
     return HomeState(
-      allRecipes: allRecipes ?? this.allRecipes,
-      filteredRecipes: filteredRecipes ?? this.filteredRecipes,
+      // HAPUS KEDUA LIST INI
+      // allRecipes: allRecipes ?? this.allRecipes,
+      // filteredRecipes: filteredRecipes ?? this.filteredRecipes,
       searchQuery: searchQuery ?? this.searchQuery,
       maxDuration: maxDuration ?? this.maxDuration,
       difficulty: difficulty ?? this.difficulty,
@@ -54,49 +62,57 @@ class HomeState {
   }
 }
 
-/// --- NOTIFIER CLASS ---
+/// --- NOTIFIER CLASS (Modifikasi) ---
 class HomeNotifier extends StateNotifier<HomeState> {
-  final MockRecipeRepository _repository;
+  // HAPUS REPOSITORY
+  // final MockRecipeRepository _repository;
 
-  HomeNotifier(this._repository)
-      : super(const HomeState(allRecipes: [], filteredRecipes: [])) {
-    _loadRecipes();
+  // TAMBAHKAN REFERENSI COLLECTION FIREBASE
+  final CollectionReference _recipesCollection =
+      FirebaseFirestore.instance.collection('recipes');
+
+  HomeNotifier()
+      // HAPUS INISIASI LIST KOSONG
+      : super(const HomeState()) {
+    // HAPUS _loadRecipes();
   }
 
-  void _loadRecipes() {
-    final recipes = _repository.getRecipes();
-    state = state.copyWith(allRecipes: recipes, filteredRecipes: recipes);
-  }
+  // HAPUS _loadRecipes()
+  // void _loadRecipes() { ... }
 
-  // === SETTERS ===
+  // === SETTERS (Modifikasi) ===
+  // Semua setter ini sekarang hanya perlu update state
+  // Hapus panggilan _applyFilters() dari semua setter
+  // Kita akan panggil _applyFilters() secara manual jika perlu
+  
   void setSearchQuery(String query) {
     state = state.copyWith(searchQuery: query);
-    _applyFilters();
+    // Hapus _applyFilters();
   }
 
   void setMaxDuration(int? duration) {
     state = state.copyWith(maxDuration: duration);
-    _applyFilters();
+    // Hapus _applyFilters();
   }
 
   void setDifficulty(DifficultyFilter? filter) {
     state = state.copyWith(difficulty: filter);
-    _applyFilters();
+    // Hapus _applyFilters();
   }
 
   void setCategory(CategoryFilter? filter) {
     state = state.copyWith(category: filter);
-    _applyFilters();
+    // Hapus _applyFilters();
   }
 
   void setMustIncludeIngredient(String ingredient) {
     state = state.copyWith(mustIncludeIngredient: ingredient);
-    _applyFilters();
+    // Hapus _applyFilters();
   }
 
   void setMustNotIncludeIngredient(String ingredient) {
     state = state.copyWith(mustNotIncludeIngredient: ingredient);
-    _applyFilters();
+    // Hapus _applyFilters();
   }
 
   void resetFilters() {
@@ -108,91 +124,31 @@ class HomeNotifier extends StateNotifier<HomeState> {
       mustIncludeIngredient: '',
       mustNotIncludeIngredient: '',
     );
-    _applyFilters();
+    // Hapus _applyFilters();
   }
 
-  // === CRUD ===
-  void addRecipe(Recipe recipe) {
-    _repository.addRecipe(recipe);
-    _loadRecipes();
-    _applyFilters();
+  // === CRUD (Modifikasi) ===
+  // Ubah menjadi async dan panggil Firebase
+  
+  Future<void> addRecipe(Recipe recipe) async {
+    // Model Recipe Anda sudah punya .toJson(), itu sempurna! [cite: 1103-1106]
+    await _recipesCollection.add(recipe.toJson());
+    // StreamBuilder akan otomatis update UI, jadi tidak perlu _loadRecipes()
   }
 
-  void updateRecipe(Recipe recipe) {
-    _repository.updateRecipe(recipe);
-    _loadRecipes();
-    _applyFilters();
+  Future<void> updateRecipe(Recipe recipe) async {
+    // Gunakan recipe.id untuk update dokumen [cite: 1376, 1459]
+    await _recipesCollection.doc(recipe.id).update(recipe.toJson());
   }
 
-  void deleteRecipe(String id) {
-    _repository.deleteRecipe(id);
-    _loadRecipes();
-    _applyFilters();
+  Future<void> deleteRecipe(String id) async {
+    // Gunakan id untuk hapus dokumen [cite: 1476, 1518]
+    await _recipesCollection.doc(id).delete();
   }
 
-  // === FILTER LOGIC ===
-  void _applyFilters() {
-    List<Recipe> results = state.allRecipes;
-
-    // 🔍 Filter by search query
-    if (state.searchQuery.isNotEmpty) {
-      final query = state.searchQuery.toLowerCase();
-      results = results
-          .where((r) => r.title.toLowerCase().contains(query))
-          .toList();
-    }
-
-    // ⏱️ Filter by duration
-    if (state.maxDuration != null) {
-      results = results.where((r) => r.duration <= state.maxDuration!).toList();
-    }
-
-    // 🧩 Filter by difficulty
-    if (state.difficulty != null) {
-      final difficultyString = switch (state.difficulty!) {
-        DifficultyFilter.mudah => 'Mudah',
-        DifficultyFilter.sedang => 'Sedang',
-        DifficultyFilter.sulit => 'Sulit',
-      };
-      results = results.where((r) => r.difficulty == difficultyString).toList();
-    }
-
-    // 🍽️ Filter by category
-    if (state.category != null) {
-      final categoryString = switch (state.category!) {
-        CategoryFilter.sarapan => 'Sarapan',
-        CategoryFilter.makanSiang => 'Makan Siang',
-        CategoryFilter.makanMalam => 'Makan Malam',
-        CategoryFilter.dessert => 'Dessert',
-      };
-      results = results.where((r) => r.category == categoryString).toList();
-    }
-
-    // 🧂 Filter by must-include ingredient
-    if (state.mustIncludeIngredient.isNotEmpty) {
-      final include = state.mustIncludeIngredient.toLowerCase();
-      results = results
-          .where((r) => r.ingredients.any(
-              (ing) => ing.toLowerCase().contains(include)))
-          .toList();
-    }
-
-    // 🚫 Filter by must-not-include ingredient
-    if (state.mustNotIncludeIngredient.isNotEmpty) {
-      final exclude = state.mustNotIncludeIngredient.toLowerCase();
-      results = results
-          .where((r) => !r.ingredients.any(
-              (ing) => ing.toLowerCase().contains(exclude)))
-          .toList();
-    }
-
-    // ✅ Update state
-    state = state.copyWith(filteredRecipes: results);
-  }
+  // HAPUS FUNGSI _applyFilters()
+  // Logika filter akan kita pindahkan ke UI (HomeScreen)
 }
 
-/// --- PROVIDER ---
-final homeNotifierProvider =
-    StateNotifierProvider<HomeNotifier, HomeState>((ref) {
-  return HomeNotifier(MockRecipeRepository());
-});
+// --- PROVIDER ---
+// Provider ini sudah kita ubah di file providers/home_provider.dart

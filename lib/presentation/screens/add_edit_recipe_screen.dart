@@ -1,8 +1,6 @@
-// lib/presentation/screens/add_edit_recipe_screen.dart
-
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+// import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
@@ -25,10 +23,10 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
 
   late TextEditingController _titleController;
   late TextEditingController _durationController;
-  late TextEditingController _difficultyController;
-  late TextEditingController _categoryController;
   late TextEditingController _ingredientsController;
   late TextEditingController _stepsController;
+  late String _selectedDifficulty;
+  late String _selectedCategory;
 
   final ImagePicker _picker = ImagePicker();
   String? _selectedImagePath;
@@ -45,29 +43,27 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
     _titleController = TextEditingController(text: recipe?.title ?? '');
     _durationController =
         TextEditingController(text: recipe?.duration.toString() ?? '');
-    _difficultyController =
-        TextEditingController(text: recipe?.difficulty ?? 'Mudah');
-    _categoryController =
-        TextEditingController(text: recipe?.category ?? 'Makan Malam');
     _ingredientsController =
         TextEditingController(text: recipe?.ingredients.join(', ') ?? '');
     _stepsController =
         TextEditingController(text: recipe?.steps.join('\n') ?? '');
     _selectedImagePath = recipe?.imageUrl;
+    
+    _selectedDifficulty = recipe?.difficulty ?? 'Mudah';
+    _selectedCategory = recipe?.category ?? 'Makan Malam';
+    // -------------
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _durationController.dispose();
-    _difficultyController.dispose();
-    _categoryController.dispose();
     _ingredientsController.dispose();
     _stepsController.dispose();
     super.dispose();
   }
 
-  // === IMAGE PICKER ===
+  // === IMAGE PICKER (Tetap Sama) ===
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? image = await _picker.pickImage(
@@ -80,7 +76,8 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
         final appDir = await getApplicationDocumentsDirectory();
         final fileName =
             '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
-        final savedImage = await File(image.path).copy('${appDir.path}/$fileName');
+        final savedImage =
+            await File(image.path).copy('${appDir.path}/$fileName');
 
         setState(() {
           _selectedImagePath = savedImage.path;
@@ -91,7 +88,7 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
     }
   }
 
-  // === DELETE RECIPE ===
+  // === DELETE RECIPE (Tetap Sama) ===
   Future<void> _deleteRecipe() async {
     if (!_isEditing) return;
 
@@ -108,8 +105,7 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            style:
-                FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             child: const Text('Hapus'),
           ),
         ],
@@ -118,13 +114,13 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
 
     if (shouldDelete == true) {
       final notifier = ref.read(homeNotifierProvider.notifier);
-      notifier.deleteRecipe(widget.recipe!.id);
-      context.pop();
+      await notifier.deleteRecipe(widget.recipe!.id);
+      if (context.mounted) context.pop();
     }
   }
 
-  // === SUBMIT FORM ===
-  void _submit() {
+  // === SUBMIT FORM (Modifikasi) ===
+  void _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedImagePath == null || _selectedImagePath!.isEmpty) {
@@ -146,16 +142,18 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
       title: _titleController.text,
       imageUrl: _selectedImagePath!,
       duration: duration,
-      difficulty: _difficultyController.text,
-      category: _categoryController.text,
+      difficulty: _selectedDifficulty,
+      category: _selectedCategory,
       ingredients: ingredients,
       steps: steps,
     );
 
     final notifier = ref.read(homeNotifierProvider.notifier);
-    _isEditing ? notifier.updateRecipe(newRecipe) : notifier.addRecipe(newRecipe);
+    _isEditing
+        ? await notifier.updateRecipe(newRecipe)
+        : await notifier.addRecipe(newRecipe);
 
-    context.pop();
+    if (context.mounted) context.pop();
   }
 
   // === SNACKBAR HELPER ===
@@ -169,7 +167,7 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
     );
   }
 
-  // === UI BUILD ===
+  // === UI BUILD  ===
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
@@ -179,7 +177,7 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
       appBar: AppBar(
         title: Text(
           _isEditing ? 'Edit Resep' : 'Tambah Resep',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white), // <-- Warna Putih
         ),
         backgroundColor: const Color(0xFF4CAF50),
         actions: [
@@ -189,11 +187,6 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
               onPressed: _deleteRecipe,
               icon: const Icon(Icons.delete, color: Colors.white),
             ),
-          IconButton(
-            tooltip: 'Simpan Resep',
-            onPressed: _submit,
-            icon: const Icon(Icons.save, color: Colors.white),
-          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -202,14 +195,40 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
           key: _formKey,
           child: Column(
             children: [
-              _buildTextField(_titleController, 'Judul Resep', 'Judul tidak boleh kosong'),
+              _buildTextField(
+                  _titleController, 'Judul Resep', 'Judul tidak boleh kosong'),
               const SizedBox(height: 12),
               _buildImagePicker(width),
               _buildDurationField(),
-              _buildTextField(_difficultyController, 'Tingkat Kesulitan', 'Tingkat kesulitan wajib diisi'),
-              _buildTextField(_categoryController, 'Kategori', 'Kategori wajib diisi'),
-              _buildTextField(_ingredientsController, 'Bahan (pisahkan dengan koma)', 'Bahan wajib diisi', maxLines: 3),
-              _buildTextField(_stepsController, 'Langkah-langkah', 'Langkah wajib diisi', maxLines: 5),
+              
+              _buildDropdownField(
+                label: 'Tingkat Kesulitan',
+                value: _selectedDifficulty,
+                items: ['Mudah', 'Sedang', 'Sulit'], 
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedDifficulty = newValue!;
+                  });
+                },
+              ),
+              _buildDropdownField(
+                label: 'Kategori',
+                value: _selectedCategory,
+                items: ['Sarapan', 'Makan Siang', 'Makan Malam', 'Dessert'],
+                onChanged: (newValue) {
+                  setState(() {
+                    _selectedCategory = newValue!;
+                  });
+                },
+              ),
+              // -------------
+
+              _buildTextField(_ingredientsController,
+                  'Bahan (pisahkan dengan koma)', 'Bahan wajib diisi',
+                  maxLines: 3),
+              _buildTextField(_stepsController, 'Langkah-langkah (pisahkan dengan Enter)',
+                  'Langkah wajib diisi',
+                  maxLines: 5),
               const SizedBox(height: 24),
               _buildSubmitButton(width),
             ],
@@ -220,6 +239,7 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
   }
 
   // === UI COMPONENTS ===
+  
   Widget _buildImagePicker(double width) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -291,6 +311,39 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
     );
   }
 
+  // FUNGSI HELPER BARU UNTUK DROPDOWN
+  Widget _buildDropdownField({
+    required String label,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        items: items.map((String item) {
+          return DropdownMenuItem<String>(
+            value: item,
+            child: Text(item),
+          );
+        }).toList(),
+        onChanged: onChanged,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        validator: (v) => v == null || v.isEmpty ? '$label wajib diisi' : null,
+      ),
+    );
+  }
+  // -------------
+
+  // _buildDurationField 
   Widget _buildDurationField() {
     return _buildTextField(
       _durationController,
@@ -299,6 +352,7 @@ class _AddEditRecipeScreenState extends ConsumerState<AddEditRecipeScreen> {
     );
   }
 
+  // Button Submit
   Widget _buildSubmitButton(double width) {
     return Container(
       width: double.infinity,

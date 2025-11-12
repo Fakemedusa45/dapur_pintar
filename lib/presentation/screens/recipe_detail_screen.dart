@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dapur_pintar/domain/models/recipe.dart';
 import 'package:dapur_pintar/application/providers/saved_recipes_provider.dart';
-import 'package:dapur_pintar/core/utils/responsive.dart';
 import 'package:go_router/go_router.dart';
 
 class RecipeDetailScreen extends ConsumerWidget {
@@ -30,6 +29,7 @@ class RecipeDetailScreen extends ConsumerWidget {
           recipe.title,
           style: TextStyle(
             fontWeight: FontWeight.bold,
+            color: Colors.white,
             fontSize: isTablet ? 24 : 18,
           ),
         ),
