@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 // Providers & Widgets
 import 'package:dapur_pintar/application/providers/home_provider.dart';
 import 'package:dapur_pintar/application/notifiers/home_notifier.dart';
+import 'package:dapur_pintar/application/providers/scan_provider.dart';
 import 'package:dapur_pintar/presentation/widgets/recipe_card.dart';
 import 'package:dapur_pintar/presentation/widgets/filter_bottom_sheet.dart';
 
@@ -34,6 +35,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   ];
 
   void _onItemTapped(int index) {
+    // --- TAMBAHKAN BLOK INI ---
+    if (index == 2) { // Jika pengguna menekan tab "Pindai"
+      // Reset state scan
+      ref.read(scanNotifierProvider.notifier).resetDetection();
+    }
+    // --- AKHIR TAMBAHAN ---
     setState(() => _selectedIndex = index);
 
     switch (index) {
@@ -188,6 +195,16 @@ class HomeContent extends ConsumerWidget {
     // langsung di Firestore ('arrayDoesNotContain'). Kita akan filter manual.
     // --- AKHIR LOGIKA QUERY ---
 
+    // --- TAMBAHKAN BLOK BARU INI ---
+    // Filter dari hasil scan
+    if (state.scannedIngredients.isNotEmpty) {
+      for (final ingredient in state.scannedIngredients) {
+        // Kita tambahkan filter array-contains untuk SETIAP bahan
+        query = query.where('ingredients', arrayContains: ingredient.trim());
+      }
+    }
+    // --- AKHIR BLOK BARU ---
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: 12),
       child: Column(
@@ -276,7 +293,7 @@ class HomeContent extends ConsumerWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Resep Terbaru',
+                  'Resep',
                   style: TextStyle(
                     fontSize: width * 0.05,
                     fontWeight: FontWeight.bold,
@@ -288,6 +305,11 @@ class HomeContent extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 16),
+
+          // --- PANGGIL WIDGET BARU DI SINI ---
+          if (state.scannedIngredients.isNotEmpty)
+            _buildScannedIngredients(ref, state.scannedIngredients, width),
+          // --- AKHIR PANGGILAN WIDGET ---
 
           // --- GANTI EXPANDED INI ---
           Expanded(
@@ -388,4 +410,72 @@ class HomeContent extends ConsumerWidget {
       ),
     );
   }
+}
+
+// LETAKKAN INI DI BAWAH WIDGET HomeContent
+Widget _buildScannedIngredients(
+    WidgetRef ref, List<String> ingredients, double width) {
+  return Container(
+    width: double.infinity,
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.1),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        )
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Mencari resep dengan bahan:',
+              style: TextStyle(
+                fontSize: width * 0.04,
+                fontWeight: FontWeight.bold,
+                color: const Color(0xFF2E7D32),
+              ),
+            ),
+            // Tombol "Clear"
+            TextButton(
+              style: TextButton.styleFrom(
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              onPressed: () {
+                // Reset filter scan
+                ref.read(homeNotifierProvider.notifier).setScannedIngredients([]);
+              },
+              child: const Text('Hapus'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Daftar Chip
+        Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: ingredients
+              .map(
+                (ing) => Chip(
+                  label: Text(ing),
+                  backgroundColor: const Color(0xFFE8F5E9),
+                  labelStyle: const TextStyle(color: Color(0xFF2E7D32)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                ),
+              )
+              .toList(),
+        ),
+      ],
+    ),
+  );
 }

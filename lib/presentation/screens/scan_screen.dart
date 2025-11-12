@@ -1,9 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// HAPUS import 'package:camera/camera.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart'; // <-- TAMBAHKAN
+import 'package:image_picker/image_picker.dart';
 
 // Providers & Notifiers
 import 'package:dapur_pintar/application/providers/scan_provider.dart';
@@ -28,7 +27,7 @@ class _ScanScreenState extends State<ScanScreen> {
   static final List<Widget> _screens = <Widget>[
     HomeContent(),
     SavedContent(),
-    _ScanContent(), // Widget ini tetap
+    _ScanContent(),
   ];
 
   void _onItemTapped(int index) {
@@ -348,10 +347,10 @@ class _ScanContent extends ConsumerWidget {
               ),
             ),
             onPressed: () {
-              final ingredientString = ingredients.join(', ');
+              // final ingredientString = ingredients.join(', ');
               ref
                   .read(homeNotifierProvider.notifier)
-                  .setMustIncludeIngredient(ingredientString);
+                  .setScannedIngredients(ingredients);
               ref.read(scanNotifierProvider.notifier).resetDetection();
               
               // Pergi ke Home Screen

@@ -10,17 +10,19 @@ import 'package:dapur_pintar/presentation/routes/app_router.dart';
 import 'package:dapur_pintar/presentation/screens/home_screen.dart';
 import 'package:dapur_pintar/presentation/screens/scan_screen.dart';
 
+import 'package:dapur_pintar/application/providers/scan_provider.dart'; // <-- TAMBAHKAN
+
 /// ==============================
 /// Main Saved Recipes Screen
 /// ==============================
-class SavedRecipesScreen extends StatefulWidget {
+class SavedRecipesScreen extends ConsumerStatefulWidget {
   const SavedRecipesScreen({super.key});
 
   @override
-  State<SavedRecipesScreen> createState() => _SavedRecipesScreenState();
+  ConsumerState<SavedRecipesScreen> createState() => _SavedRecipesScreenState(); // <-- UBAH
 }
 
-class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
+class _SavedRecipesScreenState extends ConsumerState<SavedRecipesScreen> {
   int _selectedIndex = 1;
 
   static final List<Widget> _screens = <Widget>[
@@ -30,6 +32,14 @@ class _SavedRecipesScreenState extends State<SavedRecipesScreen> {
   ];
 
   void _onItemTapped(int index) {
+
+    // --- TAMBAHKAN BLOK INI ---
+    if (index == 2) { // Jika pengguna menekan tab "Pindai"
+      // Reset state scan
+      ref.read(scanNotifierProvider.notifier).resetDetection();
+    }
+    // --- AKHIR TAMBAHAN ---
+
     setState(() => _selectedIndex = index);
 
     // Navigasi antar halaman utama
