@@ -14,14 +14,14 @@ import 'package:dapur_pintar/presentation/routes/app_router.dart';
 import 'package:dapur_pintar/presentation/screens/home_screen.dart';
 import 'package:dapur_pintar/presentation/screens/saved_recipes_screen.dart';
 
-class ScanScreen extends StatefulWidget {
+class ScanScreen extends ConsumerStatefulWidget {
   const ScanScreen({super.key});
 
   @override
-  State<ScanScreen> createState() => _ScanScreenState();
+  ConsumerState<ScanScreen> createState() => _ScanScreenState();
 }
 
-class _ScanScreenState extends State<ScanScreen> {
+class _ScanScreenState extends ConsumerState<ScanScreen> {
   int _selectedIndex = 2;
 
   static final List<Widget> _screens = <Widget>[
@@ -31,6 +31,13 @@ class _ScanScreenState extends State<ScanScreen> {
   ];
 
   void _onItemTapped(int index) {
+    // --- TAMBAHKAN BLOK INI ---
+    if (index == 2) { // Jika pengguna menekan tab "Pindai"
+      // Reset state scan
+      ref.read(scanNotifierProvider.notifier).resetDetection();
+    }
+    // --- AKHIR TAMBAHAN ---
+
     setState(() => _selectedIndex = index);
 
     switch (index) {
