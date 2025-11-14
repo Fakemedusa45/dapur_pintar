@@ -190,11 +190,11 @@ class HomeContent extends ConsumerWidget {
       query = query.where('ingredients', arrayContains: state.mustIncludeIngredient.trim());
     }
     if (state.scannedIngredients.isNotEmpty) {
-      for (final ingredient in state.scannedIngredients) {
-        
-        query = query.where('ingredients', arrayContains: ingredient.trim());
-      }
-    }
+    query = query.where(
+      'ingredients',
+      arrayContainsAny: state.scannedIngredients.map((e) => e.trim()).toList(),
+    );
+}
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: 12),
       child: Column(
