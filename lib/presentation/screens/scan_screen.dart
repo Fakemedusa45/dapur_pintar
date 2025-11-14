@@ -9,6 +9,7 @@ import 'package:dapur_pintar/application/providers/home_provider.dart';
 import 'package:dapur_pintar/presentation/routes/app_router.dart';
 import 'package:dapur_pintar/presentation/screens/home_screen.dart';
 import 'package:dapur_pintar/presentation/screens/saved_recipes_screen.dart';
+
 class ScanScreen extends ConsumerStatefulWidget {
   const ScanScreen({super.key});
 
@@ -24,8 +25,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     const _ScanContent(),
   ];
   void _onItemTapped(int index) {
-   
-    if (index == 2) { 
+    if (index == 2) {
       ref.read(scanNotifierProvider.notifier).resetDetection();
     }
     setState(() => _selectedIndex = index);
@@ -93,6 +93,7 @@ class _ScanScreenState extends ConsumerState<ScanScreen> {
     );
   }
 }
+
 class _ScanContent extends ConsumerWidget {
   const _ScanContent();
 
@@ -129,8 +130,11 @@ class _ScanContent extends ConsumerWidget {
     }
     return _buildPickerView(context, ref, state, width);
   }
+
   Widget _buildPickerView(
       BuildContext context, WidgetRef ref, ScanState state, double width) {
+    final isMaxImagesReached = state.capturedImages.length >= 5; 
+
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
@@ -147,13 +151,17 @@ class _ScanContent extends ConsumerWidget {
             children: [
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => ref
-                      .read(scanNotifierProvider.notifier)
-                      .pickImage(ImageSource.gallery),
+                  onPressed: isMaxImagesReached
+                      ? null 
+                      : () => ref
+                          .read(scanNotifierProvider.notifier)
+                          .pickImage(ImageSource.gallery),
                   icon: const Icon(Icons.photo_library),
                   label: const Text('Galeri'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
+                    backgroundColor: isMaxImagesReached
+                        ? Colors.grey 
+                        : const Color(0xFF4CAF50),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -165,13 +173,17 @@ class _ScanContent extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => ref
-                      .read(scanNotifierProvider.notifier)
-                      .pickImage(ImageSource.camera),
+                  onPressed: isMaxImagesReached
+                      ? null 
+                      : () => ref
+                          .read(scanNotifierProvider.notifier)
+                          .pickImage(ImageSource.camera),
                   icon: const Icon(Icons.camera_alt),
                   label: const Text('Kamera'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4CAF50),
+                    backgroundColor: isMaxImagesReached
+                        ? Colors.grey 
+                        : const Color(0xFF4CAF50),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -182,6 +194,19 @@ class _ScanContent extends ConsumerWidget {
               ),
             ],
           ),
+          if (isMaxImagesReached)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(
+                'Maksimal 5 gambar yang bisa dipilih.',
+                style: TextStyle(
+                  color: Colors.red[700],
+                  fontSize: width * 0.035,
+                  fontWeight: FontWeight.w500,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
           const SizedBox(height: 24),
           Text(
             'Bahan untuk dipindai:',
@@ -207,7 +232,7 @@ class _ScanContent extends ConsumerWidget {
             )
           else
             Container(
-              height: width * 0.3, 
+              height: width * 0.3,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: state.capturedImages.length,
@@ -253,7 +278,7 @@ class _ScanContent extends ConsumerWidget {
                 },
               ),
             ),
-          const Spacer(), 
+          const Spacer(),
           if (state.capturedImages.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
@@ -277,6 +302,7 @@ class _ScanContent extends ConsumerWidget {
       ),
     );
   }
+
   Widget _buildResults(
       BuildContext context, WidgetRef ref, List<String> ingredients) {
     final width = MediaQuery.of(context).size.width;
@@ -311,50 +337,50 @@ class _ScanContent extends ConsumerWidget {
           ),
           const SizedBox(height: 32),
           GestureDetector(
-  onTap: () {
-    ref.read(scanNotifierProvider.notifier).resetDetection();
-  },
-  child: AnimatedContainer(
-    duration: const Duration(milliseconds: 250),
-    curve: Curves.easeOutCubic,
-    padding: EdgeInsets.symmetric(
-      horizontal: width * 0.12,
-      vertical: width * 0.045,
-    ),
-    decoration: BoxDecoration(
-     gradient: const LinearGradient(
-  colors: [Color(0xFFFFD54F), Color(0xFFFFB300)], 
-  begin: Alignment.topLeft,
-  end: Alignment.bottomRight,
-),
-boxShadow: [
-  BoxShadow(
-    color: Colors.orangeAccent.withOpacity(0.4),
-    blurRadius: 10,
-    offset: const Offset(0, 4),
-  ),
-],
-      borderRadius: BorderRadius.circular(16),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Icon(Icons.refresh, color: Colors.white, size: 22),
-        const SizedBox(width: 8),
-        const Text(
-          'Scan Lagi',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            letterSpacing: 0.5,
+            onTap: () {
+              ref.read(scanNotifierProvider.notifier).resetDetection();
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              padding: EdgeInsets.symmetric(
+                horizontal: width * 0.12,
+                vertical: width * 0.045,
+              ),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFFD54F), Color(0xFFFFB300)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orangeAccent.withOpacity(0.4),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.refresh, color: Colors.white, size: 22),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Scan Lagi',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ],
-    ),
-  ),
-),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
