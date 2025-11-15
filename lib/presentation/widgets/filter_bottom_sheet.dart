@@ -9,6 +9,7 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
   @override
   ConsumerState<FilterBottomSheet> createState() => _FilterBottomSheetState();
 }
+
 class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late TextEditingController _mustIncludeController;
   late TextEditingController _mustNotIncludeController;
@@ -32,6 +33,45 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     _mustIncludeController.dispose();
     _mustNotIncludeController.dispose();
     super.dispose();
+  }
+
+  // Helper method untuk toggle duration
+  void _toggleDuration(int? value) {
+    final currentValue = ref.read(homeNotifierProvider).maxDuration;
+    if (currentValue == value) {
+      // Jika sudah selected, reset ke null
+      ref.read(homeNotifierProvider.notifier).setMaxDuration(null);
+    } else {
+      // Jika belum selected, set value
+      ref.read(homeNotifierProvider.notifier).setMaxDuration(value);
+    }
+  }
+
+  // Helper method untuk toggle difficulty
+  void _toggleDifficulty(DifficultyFilter? value) {
+    final currentValue = ref.read(homeNotifierProvider).difficulty;
+    print('Current: $currentValue, New: $value'); // DEBUG
+    if (currentValue == value) {
+      print('Resetting to null'); // DEBUG
+      // Jika sudah selected, reset ke null
+      ref.read(homeNotifierProvider.notifier).setDifficulty(null);
+    } else {
+      print('Setting to $value'); // DEBUG
+      // Jika belum selected, set value
+      ref.read(homeNotifierProvider.notifier).setDifficulty(value);
+    }
+  }
+
+  // Helper method untuk toggle category
+  void _toggleCategory(CategoryFilter? value) {
+    final currentValue = ref.read(homeNotifierProvider).category;
+    if (currentValue == value) {
+      // Jika sudah selected, reset ke null
+      ref.read(homeNotifierProvider.notifier).setCategory(null);
+    } else {
+      // Jika belum selected, set value
+      ref.read(homeNotifierProvider.notifier).setCategory(value);
+    }
   }
 
   @override
@@ -77,17 +117,13 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                             label: '< 30 menit',
                             isSelected: state.maxDuration == 30,
                             icon: Icons.timer_outlined,
-                            onTap: () => ref
-                                .read(homeNotifierProvider.notifier)
-                                .setMaxDuration(30),
+                            onTap: () => _toggleDuration(30),
                           ),
                           _buildFilterChip(
-                            label: '30 - 60 menit',
-                            isSelected: state.maxDuration == 60,
+                            label: '> 30 menit',
+                            isSelected: state.maxDuration == 99999,
                             icon: Icons.timer,
-                            onTap: () => ref
-                                .read(homeNotifierProvider.notifier)
-                                .setMaxDuration(60),
+                            onTap: () => _toggleDuration(60),
                           ),
                           _buildFilterChip(
                             label: 'Semua',
@@ -113,37 +149,28 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                         children: [
                           _buildFilterChip(
                             label: 'Mudah',
-                            isSelected:
-                                state.difficulty == DifficultyFilter.mudah,
+                            isSelected: state.difficulty == DifficultyFilter.mudah,
                             icon: Icons.sentiment_satisfied,
                             color: Colors.green,
-                            onTap: () => ref
-                                .read(homeNotifierProvider.notifier)
-                                .setDifficulty(DifficultyFilter.mudah),
+                            onTap: () => _toggleDifficulty(DifficultyFilter.mudah),
                           ),
                           _buildFilterChip(
                             label: 'Sedang',
-                            isSelected:
-                                state.difficulty == DifficultyFilter.sedang,
+                            isSelected: state.difficulty == DifficultyFilter.sedang,
                             icon: Icons.sentiment_neutral,
                             color: Colors.orange,
-                            onTap: () => ref
-                                .read(homeNotifierProvider.notifier)
-                                .setDifficulty(DifficultyFilter.sedang),
+                            onTap: () => _toggleDifficulty(DifficultyFilter.sedang),
                           ),
                           _buildFilterChip(
                             label: 'Sulit',
-                            isSelected:
-                                state.difficulty == DifficultyFilter.sulit,
+                            isSelected: state.difficulty == DifficultyFilter.sulit,
                             icon: Icons.sentiment_very_dissatisfied,
                             color: Colors.red,
-                            onTap: () => ref
-                                .read(homeNotifierProvider.notifier)
-                                .setDifficulty(DifficultyFilter.sulit),
+                            onTap: () => _toggleDifficulty(DifficultyFilter.sulit),
                           ),
                           _buildFilterChip(
                             label: 'Semua',
-                            isSelected: state.difficulty == null,
+                            isSelected: state.difficulty == Null,
                             icon: Icons.all_inclusive,
                             onTap: () => ref
                                 .read(homeNotifierProvider.notifier)
@@ -165,43 +192,31 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                         children: [
                           _buildFilterChip(
                             label: 'Sarapan',
-                            isSelected:
-                                state.category == CategoryFilter.sarapan,
+                            isSelected: state.category == CategoryFilter.sarapan,
                             icon: Icons.wb_sunny,
                             color: Colors.amber,
-                            onTap: () => ref
-                                .read(homeNotifierProvider.notifier)
-                                .setCategory(CategoryFilter.sarapan),
+                            onTap: () => _toggleCategory(CategoryFilter.sarapan),
                           ),
                           _buildFilterChip(
                             label: 'Makan Siang',
-                            isSelected:
-                                state.category == CategoryFilter.makanSiang,
+                            isSelected: state.category == CategoryFilter.makanSiang,
                             icon: Icons.lunch_dining,
                             color: Colors.orange,
-                            onTap: () => ref
-                                .read(homeNotifierProvider.notifier)
-                                .setCategory(CategoryFilter.makanSiang),
+                            onTap: () => _toggleCategory(CategoryFilter.makanSiang),
                           ),
                           _buildFilterChip(
                             label: 'Makan Malam',
-                            isSelected:
-                                state.category == CategoryFilter.makanMalam,
+                            isSelected: state.category == CategoryFilter.makanMalam,
                             icon: Icons.dinner_dining,
                             color: Colors.deepPurple,
-                            onTap: () => ref
-                                .read(homeNotifierProvider.notifier)
-                                .setCategory(CategoryFilter.makanMalam),
+                            onTap: () => _toggleCategory(CategoryFilter.makanMalam),
                           ),
                           _buildFilterChip(
                             label: 'Dessert',
-                            isSelected:
-                                state.category == CategoryFilter.dessert,
+                            isSelected: state.category == CategoryFilter.dessert,
                             icon: Icons.cake,
                             color: Colors.pink,
-                            onTap: () => ref
-                                .read(homeNotifierProvider.notifier)
-                                .setCategory(CategoryFilter.dessert),
+                            onTap: () => _toggleCategory(CategoryFilter.dessert),
                           ),
                           _buildFilterChip(
                             label: 'Semua',
@@ -256,6 +271,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       ),
     );
   }
+
   Widget _buildHandleBar() => Container(
         margin: const EdgeInsets.only(top: 12, bottom: 8),
         width: 40,

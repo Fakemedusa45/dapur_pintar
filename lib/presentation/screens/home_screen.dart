@@ -11,8 +11,8 @@ import 'package:dapur_pintar/presentation/routes/app_router.dart';
 import 'package:dapur_pintar/presentation/screens/saved_recipes_screen.dart';
 import 'package:dapur_pintar/presentation/screens/scan_screen.dart';
 
-import 'package:cloud_firestore/cloud_firestore.dart'; 
-import 'package:dapur_pintar/domain/models/recipe.dart'; 
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dapur_pintar/domain/models/recipe.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -24,24 +24,23 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _selectedIndex = 0;
 
-   late List<Widget> _screens;
+  late List<Widget> _screens;
 
   @override
   void initState() {
     super.initState();
     _screens = [
       const HomeContent(),
-      const SavedRecipesScreen(), 
+      const SavedRecipesScreen(),
       const ScanScreen(),
     ];
   }
 
   void _onItemTapped(int index) {
-
-    if (index == 1) {  
-  ref.read(savedRecipesNotifierProvider.notifier).loadSavedRecipes(); 
-} 
-    if (index == 2) { 
+    if (index == 1) {
+      ref.read(savedRecipesNotifierProvider.notifier).loadSavedRecipes();
+    }
+    if (index == 2) {
       ref.read(scanNotifierProvider.notifier).resetDetection();
     }
     setState(() => _selectedIndex = index);
@@ -67,15 +66,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         leading: Padding(
-          padding: const EdgeInsets.all(8.0), 
+          padding: const EdgeInsets.all(8.0),
           child: Image.asset(
-            'assets/images/logo2.png', 
+            'assets/images/logo2.png',
           ),
         ),
         title: const Text(
           'Dapur Pintar',
-          style: TextStyle(fontWeight: FontWeight.bold,
-          color: Colors.white,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
         backgroundColor: const Color(0xFF4CAF50),
@@ -101,7 +101,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         duration: const Duration(milliseconds: 300),
         child: Container(
           key: ValueKey<int>(_selectedIndex),
-          
           decoration: const BoxDecoration(
             gradient: LinearGradient(
               colors: [Color(0xFFE8F5E8), Color(0xFFF1F8E9)],
@@ -165,10 +164,11 @@ class HomeContent extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(homeNotifierProvider);
     final width = MediaQuery.of(context).size.width;
+
+    // STRATEGI HYBRID: Query Firestore dengan filter minimal (1-2 field saja)
     Query query = FirebaseFirestore.instance.collection('recipes');
-    if (state.maxDuration != null) {
-      query = query.where('duration', isLessThanOrEqualTo: state.maxDuration);
-    }
+
+    // Filter 1: Difficulty (jika ada)
     if (state.difficulty != null) {
       final difficultyString = switch (state.difficulty!) {
         DifficultyFilter.mudah => 'Mudah',
@@ -177,6 +177,8 @@ class HomeContent extends ConsumerWidget {
       };
       query = query.where('difficulty', isEqualTo: difficultyString);
     }
+
+    // Filter 2: Category (jika ada)
     if (state.category != null) {
       final categoryString = switch (state.category!) {
         CategoryFilter.sarapan => 'Sarapan',
@@ -186,15 +188,7 @@ class HomeContent extends ConsumerWidget {
       };
       query = query.where('category', isEqualTo: categoryString);
     }
-    if (state.mustIncludeIngredient.isNotEmpty) {
-      query = query.where('ingredients', arrayContains: state.mustIncludeIngredient.trim());
-    }
-    if (state.scannedIngredients.isNotEmpty) {
-  query = query.where(
-    'ingredients',
-    arrayContainsAny: state.scannedIngredients.map((e) => e.trim()).toList(),
-  );
-}
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: width * 0.05, vertical: 12),
       child: Column(
@@ -299,7 +293,9 @@ class HomeContent extends ConsumerWidget {
               stream: query.snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator(color: Color(0xFF4CAF50)));
+                  return const Center(
+                      child: CircularProgressIndicator(
+                          color: Color(0xFF4CAF50)));
                 }
                 if (snapshot.hasError) {
                   return Center(child: Text('Error: ${snapshot.error}'));
@@ -307,6 +303,8 @@ class HomeContent extends ConsumerWidget {
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
                   return _buildEmptyState(width);
                 }
+
+                // Konversi Firestore docs ke Recipe objects
                 List<Recipe> recipes = [];
                 for (var doc in snapshot.data!.docs) {
                   final data = doc.data() as Map<String, dynamic>;
@@ -316,20 +314,59 @@ class HomeContent extends ConsumerWidget {
                   };
                   recipes.add(Recipe.fromJson(fullData));
                 }
-                final filteredRecipes = recipes.where((recipe) {
-                  final titleMatch = state.searchQuery.isEmpty ||
-                      recipe.title.toLowerCase().contains(state.searchQuery.toLowerCase());
-                  final excludeMatch = state.mustNotIncludeIngredient.isEmpty ||
-                      !recipe.ingredients.any((ing) => 
-                          ing.toLowerCase().contains(state.mustNotIncludeIngredient.toLowerCase()));
-                  
-                  return titleMatch && excludeMatch;
-                }).toList();
 
+                // ===== CLIENT-SIDE FILTERING =====
+                // Filter sisanya di client side untuk menghindari banyak index
+                final filteredRecipes = recipes.where((recipe) {
+                  // Filter: Search Query (title)
+                  if (state.searchQuery.isNotEmpty) {
+                    if (!recipe.title
+                        .toLowerCase()
+                        .contains(state.searchQuery.toLowerCase())) {
+                      return false;
+                    }
+                  }
+
+                  // Filter: Max Duration
+                  if (state.maxDuration != null) {
+                    if (recipe.duration > state.maxDuration!) {
+                      return false;
+                    }
+                  }
+
+                  // Filter: Must Include Ingredient
+                  if (state.mustIncludeIngredient.isNotEmpty) {
+                    bool hasIngredient = recipe.ingredients.any((ing) => ing
+                        .toLowerCase()
+                        .contains(state.mustIncludeIngredient.toLowerCase()));
+                    if (!hasIngredient) return false;
+                  }
+
+                  // Filter: Must NOT Include Ingredient
+                  if (state.mustNotIncludeIngredient.isNotEmpty) {
+                    bool hasExcludedIngredient = recipe.ingredients.any((ing) =>
+                        ing.toLowerCase().contains(
+                            state.mustNotIncludeIngredient.toLowerCase()));
+                    if (hasExcludedIngredient) return false;
+                  }
+
+                  // Filter: Scanned Ingredients (at least one match)
+                  if (state.scannedIngredients.isNotEmpty) {
+                    bool hasAnyScannedIngredient =
+                        state.scannedIngredients.any((scanned) =>
+                            recipe.ingredients.any((ing) => ing
+                                .toLowerCase()
+                                .contains(scanned.toLowerCase())));
+                    if (!hasAnyScannedIngredient) return false;
+                  }
+
+                  return true;
+                }).toList();
 
                 if (filteredRecipes.isEmpty) {
                   return _buildEmptyState(width);
                 }
+
                 return ResponsiveGrid(
                   recipeList: filteredRecipes,
                   onRecipeTap: (recipe) {
@@ -355,7 +392,8 @@ class HomeContent extends ConsumerWidget {
               color: Colors.grey[100],
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.no_food, size: width * 0.2, color: Colors.grey[400]),
+            child: Icon(Icons.no_food,
+                size: width * 0.2, color: Colors.grey[400]),
           ),
           const SizedBox(height: 24),
           Text(
@@ -417,7 +455,9 @@ Widget _buildScannedIngredients(
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               onPressed: () {
-                ref.read(homeNotifierProvider.notifier).setScannedIngredients([]);
+                ref
+                    .read(homeNotifierProvider.notifier)
+                    .setScannedIngredients([]);
               },
               child: const Text('Hapus'),
             ),
