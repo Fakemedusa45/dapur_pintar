@@ -33,9 +33,9 @@ class HomeState {
   /// CopyWith with optional null-replacement handling
   HomeState copyWith({
     String? searchQuery,
-    int? maxDuration,
-    DifficultyFilter? difficulty,
-    CategoryFilter? category,
+    Object? maxDuration = _undefined,
+    Object? difficulty = _undefined,
+    Object? category = _undefined,
     String? mustIncludeIngredient,
     String? mustNotIncludeIngredient,
     List<String>? scannedIngredients,
@@ -43,15 +43,17 @@ class HomeState {
   }) {
     return HomeState(
       searchQuery: searchQuery ?? this.searchQuery,
-      maxDuration: maxDuration ?? this.maxDuration,
-      difficulty: difficulty ?? this.difficulty,
-      category: category ?? this.category,
+      maxDuration: maxDuration == _undefined ? this.maxDuration : maxDuration as int?,
+      difficulty: difficulty == _undefined ? this.difficulty : difficulty as DifficultyFilter?,
+      category: category == _undefined ? this.category : category as CategoryFilter?,
       mustIncludeIngredient: mustIncludeIngredient ?? this.mustIncludeIngredient,
       mustNotIncludeIngredient: mustNotIncludeIngredient ?? this.mustNotIncludeIngredient,
       scannedIngredients: scannedIngredients ?? this.scannedIngredients,
       recipes: recipes ?? this.recipes, // Tambahkan ini
     );
   }
+  
+  static const Object _undefined = Object();
 }
 
 /// --- NOTIFIER CLASS (Modifikasi) ---

@@ -37,12 +37,16 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
 
   // Helper method untuk toggle duration
   void _toggleDuration(int? value) {
+    print('_toggleDuration called with value: $value'); // DEBUG
     final currentValue = ref.read(homeNotifierProvider).maxDuration;
+    print('Current maxDuration: $currentValue'); // DEBUG
     if (currentValue == value) {
       // Jika sudah selected, reset ke null
+      print('Resetting maxDuration to null'); // DEBUG
       ref.read(homeNotifierProvider.notifier).setMaxDuration(null);
     } else {
       // Jika belum selected, set value
+      print('Setting maxDuration to $value'); // DEBUG
       ref.read(homeNotifierProvider.notifier).setMaxDuration(value);
     }
   }
@@ -64,12 +68,16 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
 
   // Helper method untuk toggle category
   void _toggleCategory(CategoryFilter? value) {
+    print('_toggleCategory called with value: $value'); // DEBUG
     final currentValue = ref.read(homeNotifierProvider).category;
+    print('Current category: $currentValue'); // DEBUG
     if (currentValue == value) {
       // Jika sudah selected, reset ke null
+      print('Resetting category to null'); // DEBUG
       ref.read(homeNotifierProvider.notifier).setCategory(null);
     } else {
       // Jika belum selected, set value
+      print('Setting category to $value'); // DEBUG
       ref.read(homeNotifierProvider.notifier).setCategory(value);
     }
   }
@@ -99,6 +107,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               _buildHeader(context),
               Flexible(
                 child: SingleChildScrollView(
+                  physics: const ClampingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,9 +130,9 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                           ),
                           _buildFilterChip(
                             label: '> 30 menit',
-                            isSelected: state.maxDuration == 99999,
+                            isSelected: state.maxDuration == -1,
                             icon: Icons.timer,
-                            onTap: () => _toggleDuration(60),
+                            onTap: () => _toggleDuration(-1),
                           ),
                           _buildFilterChip(
                             label: 'Semua',
@@ -170,7 +179,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                           ),
                           _buildFilterChip(
                             label: 'Semua',
-                            isSelected: state.difficulty == Null,
+                            isSelected: state.difficulty == null,
                             icon: Icons.all_inclusive,
                             onTap: () => ref
                                 .read(homeNotifierProvider.notifier)
@@ -398,55 +407,53 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   }) {
     final chipColor = color ?? const Color(0xFF4CAF50);
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        splashColor: chipColor.withOpacity(0.2),
-        highlightColor: chipColor.withOpacity(0.1),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 44, minWidth: 80),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            gradient: isSelected
-                ? LinearGradient(
-                    colors: [chipColor, chipColor.withOpacity(0.8)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            color: isSelected ? null : Colors.grey[100],
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: isSelected ? chipColor : Colors.grey[300]!,
-              width: isSelected ? 2 : 1,
-            ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: chipColor.withOpacity(0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : null,
+    return GestureDetector(
+      onTap: () {
+        print('FilterChip tapped: $label'); // DEBUG
+        onTap();
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 44, minWidth: 80),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [chipColor, chipColor.withOpacity(0.8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: isSelected ? null : Colors.grey[100],
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? chipColor : Colors.grey[300]!,
+            width: isSelected ? 2 : 1,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 18, color: isSelected ? Colors.white : chipColor),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : Colors.grey[800],
-                ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: chipColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 18, color: isSelected ? Colors.white : chipColor),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isSelected ? Colors.white : Colors.grey[800],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
