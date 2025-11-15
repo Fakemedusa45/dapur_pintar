@@ -114,10 +114,8 @@
 
 <h2>📁 Tautan Google Drive</h2>
 
-<p>Dokumen perencanaan, aset tambahan, dan video demo aplikasi dapat diakses melalui tautan Google Drive di bawah ini:</p>
+<p>aplikasi dapat diakses melalui tautan Google Drive di bawah ini:</p>
 
 <p>
     <a href="https://link.gdrive.placeholder.com"><strong>[Link Google Drive]</strong></a>
-    <br>
-    <em>(Catatan: Ganti <code>https://link.gdrive.placeholder.com</code> dengan tautan Google Drive Anda yang sebenarnya)</em>
 </p>
