@@ -39,9 +39,12 @@
 
 <ol>
     <li>
+        <strong>Buka Folder anda</strong>
+        <p>Selanjutnya buka folder tempat anda ingin menaruh program, lalu arahkan cursor ke alamat folder diatas dan klik, setelah itu ketikkan cmd hingga terbuka terminal command line</p>
+    </li>
+    <li>
         <strong>Clone Repositori</strong>
-        <pre><code>git clone https://github.com/Fakemedusa45/dapur_pintar
-cd dapur_pintar</code></pre>
+        <pre><code>git clone https://github.com/Fakemedusa45/dapur_pintar</code></pre>
     </li>
     <li>
         <strong>Konfigurasi Firebase</strong>
