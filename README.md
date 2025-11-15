@@ -118,5 +118,5 @@
 <p>aplikasi dapat diakses melalui tautan Google Drive di bawah ini:</p>
 
 <p>
-    <a href="https://link.gdrive.placeholder.com"><strong>[Link Google Drive]</strong></a>
+    <a href="https://drive.google.com/file/d/1ivELn5Ove7c97SU9vrSvb8jV2VNSV5ml/view?usp=sharing"><strong>[Link Google Drive]</strong></a>
 </p>
