@@ -78,6 +78,7 @@
 <ul>
     <li><strong>Endpoint:</strong> <code>https://GalaxionZero-raw-indonesian-food-detection.hf.space</code></li>
     <li><strong>Code:</strong> <code>https://huggingface.co/spaces/GalaxionZero/raw-indonesian-food-detection/blob/main/app.py</code></li>
+    <li><strong>Model:</strong> <code>https://github.com/Fakemedusa45/dapur_pintar/tree/guntur</code></li>
 </ul>
 
 <p>Selama layanan API di Hugging Face tersebut aktif dan dapat diakses oleh publik, fitur pemindaian bahan akan berfungsi tanpa perlu konfigurasi tambahan.</p>
