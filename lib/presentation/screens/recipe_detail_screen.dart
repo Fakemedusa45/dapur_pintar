@@ -108,11 +108,15 @@ class RecipeDetailScreen extends ConsumerWidget {
                           ? Image.asset(
                               updatedRecipe.imageUrl,
                               fit: BoxFit.cover,
+                              width: double.infinity,  // <--- DAN INI
+                              height: double.infinity, // <--- DAN INI  
                               errorBuilder: (_, __, ___) => _errorImagePlaceholder(),
                             )
                           : Image.file(
                               File(updatedRecipe.imageUrl),
                               fit: BoxFit.cover,
+                              width: double.infinity,  // <--- DAN INI
+                              height: double.infinity, // <--- DAN INI
                               errorBuilder: (_, __, ___) => _errorImagePlaceholder(),
                             ),
                       Positioned.fill(
